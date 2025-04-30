@@ -1,0 +1,89 @@
+.chat-window {
+	display: flex;
+	width: 75%;
+	flex-direction: column;
+	height: 100vh;
+	background-color: var(--color-gray-50);
+	position: relative;
+}
+
+.chat-window-placeholder {
+	flex: 1;
+	width: 75%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-gray-500);
+}
+
+.chat-messages {
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--spacing-6) var(--spacing-4);
+}
+
+.chat-messages-container {
+	max-width: 42rem;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-6);
+}
+
+.loading-text,
+.no-messages-text {
+	text-align: center;
+	font-size: 0.875rem;
+	color: var(--color-gray-400);
+	font-style: italic;
+}
+
+.status-message {
+	text-align: center;
+	font-size: 0.75rem;
+	color: var(--color-yellow-600);
+	font-style: italic;
+}
+
+.message-wrapper {
+	width: 100%;
+}
+
+.message-bubble {
+	max-width: 80%;
+	font-size: 14px;
+	padding: var(--spacing-4) var(--spacing-5);
+	border-radius: var(--radius-30);
+}
+
+.message-bubble--hr {
+	background-color: var(--color-green-100);
+	margin-left: auto;
+	color: var(--color-gray-800);
+}
+
+.message-bubble--user {
+	background-color: var(--color-white);
+	margin-right: auto;
+	color: var(--color-gray-800);
+}
+
+.message-meta {
+	font-size: 11px;
+	color: var(--color-gray-400);
+	margin-top: var(--spacing-1);
+	text-align: left;
+}
+
+.chat-input-container {
+	position: sticky;
+	bottom: 0;
+	width: 100%;
+	padding: var(--spacing-3) var(--spacing-4);
+	background-color: var(--color-gray-50);
+}
+
+.chat-input-wrapper {
+	max-width: 42rem;
+	margin: 0 auto;
+}
