@@ -85,6 +85,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Sidebar__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Sidebar */ "./assets/js/components/Sidebar.jsx");
 /* harmony import */ var _ChatWindow__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ChatWindow */ "./assets/js/components/ChatWindow.jsx");
 /* harmony import */ var _hooks_useMessages__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../hooks/useMessages */ "./assets/js/hooks/useMessages.js");
+/* harmony import */ var _hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../hooks/useSupportCases */ "./assets/js/hooks/useSupportCases.js");
+/* harmony import */ var _hooks_useAuthSession__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../hooks/useAuthSession */ "./assets/js/hooks/useAuthSession.js");
+
+
 
 
 
@@ -96,10 +100,25 @@ const Chat = ({
 }) => {
   const [caseId, setCaseId] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(selectedCaseId || null);
   const {
+    session
+  } = (0,_hooks_useAuthSession__WEBPACK_IMPORTED_MODULE_5__["default"])();
+  const {
+    cases,
+    loading: casesLoading
+  } = (0,_hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_4__["default"])(session);
+  const {
     messages,
     refreshMessages,
     loading
   } = (0,_hooks_useMessages__WEBPACK_IMPORTED_MODULE_3__["default"])(caseId);
+
+  // Auto-select first case after load
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    if (!caseId && cases.length > 0) {
+      setCaseId(cases[0].id);
+      onSelectCase?.(cases[0].id);
+    }
+  }, [caseId, cases, onSelectCase]);
   const handleSelectCase = id => {
     setCaseId(id);
     onSelectCase?.(id);
@@ -367,6 +386,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../contexts/SessionContext */ "./assets/js/contexts/SessionContext.jsx");
+/* harmony import */ var _utils_tokenUtils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/tokenUtils */ "./assets/js/utils/tokenUtils.js");
+/* harmony import */ var _api_apiClient__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../api/apiClient */ "./assets/js/api/apiClient.js");
+
+
 
 
 
@@ -378,12 +401,24 @@ const SessionGate = ({
     updateSession,
     ready
   } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(_contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__["default"]);
+  const [view, setView] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("mode"); // mode | enter | create
   const [form, setForm] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({
     token: "",
     email: "",
     firstName: ""
   });
   const [anonymous, setAnonymous] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
+  const [generatedToken, setGeneratedToken] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("");
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    if (view === "create" && anonymous) {
+      const token = (0,_utils_tokenUtils__WEBPACK_IMPORTED_MODULE_2__.generateToken)();
+      setGeneratedToken(token);
+      setForm(f => ({
+        ...f,
+        token
+      }));
+    }
+  }, [view, anonymous]);
   const handleChange = e => {
     const {
       name,
@@ -394,35 +429,76 @@ const SessionGate = ({
       [name]: value
     }));
   };
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    if (anonymous && form.token.trim()) {
-      updateSession({
-        token: form.token.trim()
-      });
-    } else if (!anonymous && form.email && form.firstName) {
-      updateSession({
-        email: form.email.trim(),
-        firstName: form.firstName.trim()
-      });
+    if (view === "enter") {
+      if (anonymous && form.token.trim()) {
+        updateSession({
+          token: form.token.trim()
+        });
+      } else if (!anonymous && form.email && form.firstName) {
+        updateSession({
+          email: form.email.trim(),
+          firstName: form.firstName.trim()
+        });
+      }
+    }
+    if (view === "create") {
+      try {
+        const res = await (0,_api_apiClient__WEBPACK_IMPORTED_MODULE_3__.apiFetch)("/support-cases", "POST", {
+          token: anonymous ? generatedToken : undefined,
+          email: anonymous ? "" : form.email.trim(),
+          first_name: anonymous ? "" : form.firstName.trim(),
+          anonymous
+        });
+        if (anonymous) {
+          updateSession({
+            token: res.token
+          });
+        } else {
+          updateSession({
+            email: form.email.trim(),
+            firstName: form.firstName.trim()
+          });
+        }
+      } catch (err) {
+        alert("Failed to create case: " + err.message);
+      }
     }
   };
   if (!ready) return null;
-  if (session?.token || session?.email && session?.firstName) {
-    return children;
+  if (session?.token || session?.email && session?.firstName) return children;
+
+  // ----- Initial Mode Selector -----
+  if (view === "mode") {
+    return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: "min-h-screen flex items-center justify-center bg-gray-100 px-4"
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: "bg-white p-6 rounded shadow w-full max-w-md text-center space-y-4"
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
+      className: "text-xl font-semibold"
+    }, "How would you like to start?"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: "space-y-3"
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+      onClick: () => setView("enter"),
+      className: "w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+    }, "\uD83D\uDD10 Enter Existing Conversation"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+      onClick: () => setView("create"),
+      className: "w-full bg-gray-300 text-black py-2 rounded hover:bg-gray-400"
+    }, "\u2728 Create New Conversation"))));
   }
+
+  // ----- Form View (enter/create) -----
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "min-h-screen flex items-center justify-center bg-gray-100 px-4"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
     onSubmit: handleSubmit,
-    className: "bg-white p-6 rounded shadow w-full max-w-md"
+    className: "bg-white p-6 rounded shadow w-full max-w-md space-y-4"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
-    className: "text-lg font-semibold mb-4 text-center"
+    className: "text-lg font-semibold text-center"
   }, "Enter Your Chat Session"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "flex justify-center mb-4"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
-    className: "mr-4"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    className: "flex justify-center mb-2 space-x-4"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     type: "radio",
     name: "authMode",
     checked: anonymous,
@@ -432,9 +508,7 @@ const SessionGate = ({
     name: "authMode",
     checked: !anonymous,
     onChange: () => setAnonymous(false)
-  }), " Identified")), anonymous ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "mb-4"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
+  }), " Identified")), view === "enter" && anonymous && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
     className: "block text-sm font-medium mb-1"
   }, "Access Token"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     type: "text",
@@ -442,9 +516,7 @@ const SessionGate = ({
     value: form.token,
     onChange: handleChange,
     className: "w-full border px-3 py-2 rounded"
-  })) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "mb-4"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
+  })), view === "enter" && !anonymous && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
     className: "block text-sm font-medium mb-1"
   }, "Email"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     type: "email",
@@ -452,9 +524,38 @@ const SessionGate = ({
     value: form.email,
     onChange: handleChange,
     className: "w-full border px-3 py-2 rounded"
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "mb-4"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
+    className: "block text-sm font-medium mb-1"
+  }, "First Name"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "text",
+    name: "firstName",
+    value: form.firstName,
+    onChange: handleChange,
+    className: "w-full border px-3 py-2 rounded"
+  }))), view === "create" && anonymous && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
+    className: "block text-sm font-medium mb-1"
+  }, "Your Access Token"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "flex items-center space-x-2"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "text",
+    value: generatedToken,
+    readOnly: true,
+    className: "w-full border px-3 py-2 rounded bg-gray-100"
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "button",
+    onClick: () => (0,_utils_tokenUtils__WEBPACK_IMPORTED_MODULE_2__.copyToClipboard)(generatedToken),
+    className: "bg-blue-500 text-white px-2 py-1 rounded text-sm"
+  }, "Copy")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: "text-xs text-gray-500 mt-1"
+  }, "Save this token to access the conversation again.")), view === "create" && !anonymous && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
+    className: "block text-sm font-medium mb-1"
+  }, "Email"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "email",
+    name: "email",
+    value: form.email,
+    onChange: handleChange,
+    className: "w-full border px-3 py-2 rounded"
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
     className: "block text-sm font-medium mb-1"
   }, "First Name"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     type: "text",
@@ -465,7 +566,13 @@ const SessionGate = ({
   }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
     type: "submit",
     className: "w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-  }, "Continue")));
+  }, view === "enter" ? "Continue" : "Start Conversation"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "text-center text-sm mt-2"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "button",
+    onClick: () => setView("mode"),
+    className: "text-blue-600 hover:underline"
+  }, "\u2190 Back"))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (SessionGate);
 
@@ -610,6 +717,39 @@ const ToastProvider = ({
 
 /***/ }),
 
+/***/ "./assets/js/hooks/useAuthSession.js":
+/*!*******************************************!*\
+  !*** ./assets/js/hooks/useAuthSession.js ***!
+  \*******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../contexts/SessionContext */ "./assets/js/contexts/SessionContext.jsx");
+
+
+const useAuthSession = () => {
+  const {
+    session,
+    updateSession,
+    ready
+  } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(_contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__["default"]);
+  const isAuthenticated = !!(session?.token || session?.email && session?.firstName);
+  return {
+    session,
+    updateSession,
+    ready,
+    isAuthenticated
+  };
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (useAuthSession);
+
+/***/ }),
+
 /***/ "./assets/js/hooks/useMessages.js":
 /*!****************************************!*\
   !*** ./assets/js/hooks/useMessages.js ***!
@@ -716,6 +856,32 @@ const useSupportCases = session => {
 __webpack_require__.r(__webpack_exports__);
 // extracted by mini-css-extract-plugin
 
+
+/***/ }),
+
+/***/ "./assets/js/utils/tokenUtils.js":
+/*!***************************************!*\
+  !*** ./assets/js/utils/tokenUtils.js ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   copyToClipboard: () => (/* binding */ copyToClipboard),
+/* harmony export */   generateToken: () => (/* binding */ generateToken)
+/* harmony export */ });
+const generateToken = () => {
+  return Math.random().toString(36).substring(2, 10);
+};
+const copyToClipboard = async text => {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    console.error("Failed to copy:", err);
+    return false;
+  }
+};
 
 /***/ }),
 
