@@ -42,17 +42,8 @@ class HRSC_REST_API
 
         register_rest_route('hrsc/v1', '/support-cases/(?P<id>\d+)/upload', [
             'methods' => 'POST',
-            'callback' => 'hrsc_handle_file_upload',
-            'permission_callback' => function () {
-                return current_user_can('upload_files');
-            },
-            'args' => [
-                'file' => [
-                    'required' => true,
-                    'description' => 'File to upload.',
-                    'type' => 'file',
-                ],
-            ],
+            'callback' => [self::class, 'hrsc_handle_file_upload'],
+            'permission_callback' => '__return_true'
         ]);
     }
 
@@ -62,23 +53,37 @@ class HRSC_REST_API
 
     private static function validate_token($post_id)
     {
-        $body = json_decode(file_get_contents('php://input'), true);
+        // Get token, email, and first name from $_POST if available
+        $token = isset($_POST['token']) ? sanitize_text_field($_POST['token']) : null;
+        $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : null;
+        $first_name = isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : null;
 
-        $token = sanitize_text_field($_GET['token'] ?? $_POST['token'] ?? $body['token'] ?? '');
-        $email = sanitize_email($_GET['email'] ?? $_POST['email'] ?? $body['email'] ?? '');
-        $first_name = sanitize_text_field($_GET['first_name'] ?? $_POST['first_name'] ?? $body['first_name'] ?? '');
+        // Fallback to JSON input for non-formdata requests
+        if (!$token && !$email && !$first_name) {
+            $body = json_decode(file_get_contents('php://input'), true);
+            if (is_array($body)) {
+                $token = sanitize_text_field($body['token'] ?? '');
+                $email = sanitize_email($body['email'] ?? '');
+                $first_name = sanitize_text_field($body['first_name'] ?? '');
+            }
+        }
 
         $stored_token = get_post_meta($post_id, '_hrsc_token', true);
         $stored_email = get_post_meta($post_id, '_hrsc_employee_email', true);
         $stored_first_name = get_post_meta($post_id, '_hrsc_employee_first_name', true);
 
-        if ($token && $token === $stored_token)
+        if ($token && $token === $stored_token) {
             return true;
-        if ($email && $first_name && $email === $stored_email && $first_name === $stored_first_name)
+        }
+
+        if ($email && $first_name && $email === $stored_email && $first_name === $stored_first_name) {
             return true;
+        }
 
         return false;
     }
+
+
 
     private static function rate_limit_check($token)
     {
@@ -301,6 +306,9 @@ class HRSC_REST_API
 
     public static function hrsc_handle_file_upload($request)
     {
+        error_log('Current user ID: ' . get_current_user_id());
+        error_log('Is logged in: ' . (is_user_logged_in() ? 'yes' : 'no'));
+        error_log('Can upload: ' . (current_user_can('upload_files') ? 'yes' : 'no'));
         $post_id = $request['id'];
 
         if (!get_post($post_id)) {
@@ -309,6 +317,19 @@ class HRSC_REST_API
 
         if (empty($_FILES['file'])) {
             return new WP_Error('no_file', __('No file provided.', 'hr-support-chat'), ['status' => 400]);
+        }
+
+        // Add check for token or user permissions
+        // that works with wordpress upload through REST and react / axios
+        // Support both logged-in HR users and token-based employee users
+        if (is_user_logged_in()) {
+            if (!current_user_can('upload_files')) {
+                return new WP_Error('unauthorized', __('Logged-in user not allowed to upload file.', 'hr-support-chat'), ['status' => 403]);
+            }
+        } else {
+            if (!self::validate_token($post_id)) {
+                return new WP_Error('unauthorized', __('Invalid token or session. Not allowed to upload file.', 'hr-support-chat'), ['status' => 401]);
+            }
         }
 
         $file = $_FILES['file'];

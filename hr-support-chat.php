@@ -53,7 +53,7 @@ add_action('wp_enqueue_scripts', function () {
         // Add REST URL + nonce
         wp_localize_script('hrsc-chat-app', 'hrscChatVars', [
             'restUrl' => esc_url_raw(rest_url('hrsc/v1')),
-            'nonce' => wp_create_nonce('wp_rest'),
+            'nonce' => wp_create_nonce('wp_rest')
         ]);
     }
 });

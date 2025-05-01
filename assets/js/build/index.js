@@ -390,7 +390,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
+/* harmony import */ var _contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../contexts/SessionContext */ "./assets/js/contexts/SessionContext.jsx");
+
 
 
 
@@ -398,27 +400,37 @@ const FileUploader = ({
   supportCaseId,
   onUploadSuccess
 }) => {
+  const {
+    session
+  } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(_contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__["default"]);
   const [dragOver, setDragOver] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const fileInputRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)();
   const handleFiles = async files => {
     const formData = new FormData();
     formData.append("file", files[0]);
+
+    // ✅ Add auth parameters for token-based users
+    formData.append("token", session.token || "");
+    formData.append("email", session.email || "");
+    formData.append("first_name", session.firstName || "");
     try {
-      const response = await axios__WEBPACK_IMPORTED_MODULE_1__["default"].post(`/wp-json/hrsc/v1/support-cases/${supportCaseId}/upload`, formData, {
+      const response = await axios__WEBPACK_IMPORTED_MODULE_2__["default"].post(`/wp-json/hrsc/v1/support-cases/${supportCaseId}/upload`, formData, {
         headers: {
-          "Content-Type": "multipart/form-data"
+          "X-WP-Nonce": window.hrscChatVars?.nonce
+          // Do NOT manually set Content-Type for FormData – let the browser handle it
         }
       });
       if (response.data.success) {
-        onUploadSuccess(response.data);
+        onUploadSuccess?.(response.data);
       }
     } catch (error) {
-      console.error("File upload failed:", error);
+      console.error("❌ File upload failed:", error.response?.data || error.message);
     }
   };
   const handleDrop = e => {
     e.preventDefault();
     setDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    if (e.dataTransfer.files?.length > 0) {
       handleFiles(e.dataTransfer.files);
       e.dataTransfer.clearData();
     }
@@ -430,29 +442,34 @@ const FileUploader = ({
   const handleDragLeave = () => {
     setDragOver(false);
   };
-  const fileInputRef = react__WEBPACK_IMPORTED_MODULE_0___default().createRef();
-  const handleClick = () => {
-    fileInputRef.current.click();
-  };
   const handleFileChange = e => {
-    if (e.target.files && e.target.files.length > 0) {
+    if (e.target.files?.length > 0) {
       handleFiles(e.target.files);
     }
+  };
+  const handleClick = () => {
+    fileInputRef.current?.click();
   };
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     onDrop: handleDrop,
     onDragOver: handleDragOver,
     onDragLeave: handleDragLeave,
     style: {
-      border: dragOver ? "2px dashed #000" : "2px dashed #ccc",
+      border: dragOver ? "2px dashed #444" : "2px dashed #ccc",
       padding: "20px",
       textAlign: "center",
-      position: "relative"
+      marginTop: "20px",
+      borderRadius: "6px"
     }
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Drag and drop a file here, or click the plus icon to upload."), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    style: {
+      marginBottom: "8px"
+    }
+  }, "Drag and drop a file here, or click the plus icon to upload."), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
     onClick: handleClick,
     style: {
-      fontSize: "24px"
+      fontSize: "24px",
+      cursor: "pointer"
     }
   }, "+"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     type: "file",

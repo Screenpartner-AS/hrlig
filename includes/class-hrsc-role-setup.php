@@ -26,6 +26,7 @@ class HRSC_Role_Setup
                 'delete_published_support_cases' => true,
                 'edit_private_support_cases' => true,
                 'edit_published_support_cases' => true,
+                'upload_files' => true
             ]
         );
 
