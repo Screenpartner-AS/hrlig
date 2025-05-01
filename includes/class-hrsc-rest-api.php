@@ -393,6 +393,7 @@ class HRSC_REST_API
                 'id' => $attachment->ID,
                 'title' => get_the_title($attachment->ID),
                 'source_url' => wp_get_attachment_url($attachment->ID),
+                'thumbnail_url' => wp_get_attachment_image_src($attachment->ID, 'medium')[0]
             ];
         }
 

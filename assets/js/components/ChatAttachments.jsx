@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import styles from "../styles/ChatAttachments.module.css";
 
 const ChatAttachments = ({ supportCaseId, attachments, setAttachments }) => {
 	useEffect(() => {
@@ -19,18 +20,25 @@ const ChatAttachments = ({ supportCaseId, attachments, setAttachments }) => {
 
 	if (!attachments.length) return null;
 
+	console.log("Attachments:", attachments);
+
 	return (
 		<div style={{ padding: "1rem 0" }}>
 			<h4>Attachments</h4>
-			<ul>
+			<div className={styles.attachment_list}>
 				{attachments.map((file) => (
-					<li key={file.id}>
-						<a href={file.source_url} target="_blank" rel="noopener noreferrer">
-							{file.title?.rendered || "Attachment"}
-						</a>
-					</li>
+					<a
+						className={styles.attachment_item}
+						key={file.id}
+						href={file.source_url}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<img src={file.thumbnail_url} alt={file.title}></img>
+						<span>{file.title}</span>
+					</a>
 				))}
-			</ul>
+			</div>
 		</div>
 	);
 };

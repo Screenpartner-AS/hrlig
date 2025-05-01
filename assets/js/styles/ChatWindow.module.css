@@ -1,6 +1,9 @@
 .chatContainer {
 	display: flex;
 	flex-direction: column;
+	flex-grow: 1;
+	height: 100%;
+	position: relative; /* Needed for dragOverlay absolute positioning */
 }
 
 .messagesArea {
@@ -88,18 +91,31 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background-color: rgba(255, 255, 255, 0.85);
-	z-index: 50;
+	background-color: rgba(0, 0, 0, 0.5); /* stronger visibility */
+	z-index: 1000;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border: 2px dashed #aaa;
 	pointer-events: none;
+	animation: fade-in 0.2s ease-in-out;
 }
 
 .dragMessage {
+	color: #fff;
 	font-size: 1.5rem;
-	color: #333;
+	background: rgba(0, 0, 0, 0.6);
+	padding: 1rem 2rem;
+	border-radius: 8px;
+	border: 2px dashed #fff;
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
 }
 
 .uploadButton {
@@ -119,4 +135,9 @@
 	position: absolute;
 	bottom: 12px;
 	left: 16px;
+	cursor: pointer;
+
+	&:hover {
+		background: #d4d3d3;
+	}
 }

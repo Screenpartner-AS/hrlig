@@ -1,0 +1,19 @@
+.attachment_list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.attachment_item {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 10px;
+	text-decoration: none;
+	font-size: 0.8rem;
+
+	img {
+		width: 36px;
+		height: 36px;
+		border-radius: 5px;
+	}
+}

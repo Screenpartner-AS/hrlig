@@ -88,3 +88,36 @@ body {
 #hr-support-chat-app {
 	font-size: 1rem;
 }
+
+.chat-drag-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	animation: fade-in 0.2s ease-in-out;
+}
+
+.chat-drag-message {
+	color: white;
+	font-size: 1.5rem;
+	background: rgba(0, 0, 0, 0.6);
+	padding: 1rem 2rem;
+	border-radius: 8px;
+	border: 2px dashed white;
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
