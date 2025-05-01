@@ -125,6 +125,7 @@ const Chat = ({
   onSelectCase
 }) => {
   const [caseId, setCaseId] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(selectedCaseId || null);
+  const [attachments, setAttachments] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   const {
     session
   } = (0,_hooks_useAuthSession__WEBPACK_IMPORTED_MODULE_6__["default"])();
@@ -136,16 +137,12 @@ const Chat = ({
     refreshMessages,
     loading
   } = (0,_hooks_useMessages__WEBPACK_IMPORTED_MODULE_4__["default"])(caseId);
-
-  // Detect ?case_id and ?hr_mode from query string
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const paramId = getQueryParam("case_id");
     if (paramId && /^\d+$/.test(paramId)) {
       setCaseId(parseInt(paramId, 10));
     }
   }, []);
-
-  // Auto-select first case if not loaded from query string
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     if (!caseId && cases.length > 0) {
       setCaseId(cases[0].id);
@@ -155,6 +152,7 @@ const Chat = ({
   const handleSelectCase = id => {
     setCaseId(id);
     onSelectCase?.(id);
+    setAttachments([]); // reset attachments when changing case
   };
   if (!session) return null;
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
@@ -165,12 +163,16 @@ const Chat = ({
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_7__["default"].main
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatAttachments__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    supportCaseId: caseId
+    supportCaseId: caseId,
+    attachments: attachments,
+    setAttachments: setAttachments
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatWindow__WEBPACK_IMPORTED_MODULE_2__["default"], {
     caseId: caseId,
     messages: messages,
     refreshMessages: refreshMessages,
-    loading: loading
+    loading: loading,
+    attachments: attachments,
+    setAttachments: setAttachments
   })));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Chat);
@@ -192,14 +194,15 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const ChatAttachments = ({
-  supportCaseId
+  supportCaseId,
+  attachments,
+  setAttachments
 }) => {
-  const [attachments, setAttachments] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    if (!supportCaseId) return;
+    if (!supportCaseId || attachments.length > 0) return;
     const fetchAttachments = async () => {
       try {
-        const res = await fetch(`/wp-json/wp/v2/media?parent=${supportCaseId}`);
+        const res = await fetch(`/wp-json/hrsc/v1/support-cases/${supportCaseId}/attachments`);
         const data = await res.json();
         setAttachments(data);
       } catch (err) {
@@ -207,7 +210,7 @@ const ChatAttachments = ({
       }
     };
     fetchAttachments();
-  }, [supportCaseId]);
+  }, [supportCaseId, attachments, setAttachments]);
   if (!attachments.length) return null;
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     style: {
@@ -251,7 +254,9 @@ const ChatWindow = ({
   caseId,
   messages,
   refreshMessages,
-  loading
+  loading,
+  attachments,
+  setAttachments
 }) => {
   const {
     session
@@ -259,7 +264,6 @@ const ChatWindow = ({
   const messagesEndRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const [firstLoadDone, setFirstLoadDone] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [statusMessage, setStatusMessage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
-  const [attachments, setAttachments] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   const refreshAndMarkReady = async () => {
     await refreshMessages(caseId, session);
     if (!firstLoadDone) setFirstLoadDone(true);
@@ -318,8 +322,14 @@ const ChatWindow = ({
       window.removeEventListener("offline", handleVisibilityChange);
     };
   }, []);
-  const handleUploadSuccess = attachment => {
-    setAttachments(prev => [...prev, attachment]);
+  const handleUploadSuccess = async attachment => {
+    try {
+      const res = await fetch(`/wp-json/wp/v2/media?parent=${caseId}`);
+      const data = await res.json();
+      setAttachments(data);
+    } catch (err) {
+      console.error("Failed to refresh attachments after upload", err);
+    }
   };
   if (!caseId) {
     return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
@@ -332,15 +342,7 @@ const ChatWindow = ({
     className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].messagesArea
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].messagesWrapper
-  }, attachments.length > 0 && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].attachments
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h4", null, "Attachments"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", null, attachments.map(att => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
-    key: att.id
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
-    href: att.source_url,
-    target: "_blank",
-    rel: "noopener noreferrer"
-  }, att.title?.rendered || "Attachment"))))), !firstLoadDone ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+  }, !firstLoadDone ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
     className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].loadingText
   }, "Loading conversation\u2026") : messages.length === 0 ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
     className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].emptyText
@@ -406,25 +408,25 @@ const FileUploader = ({
   const [dragOver, setDragOver] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const fileInputRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)();
   const handleFiles = async files => {
-    const formData = new FormData();
-    formData.append("file", files[0]);
-
-    // ✅ Add auth parameters for token-based users
-    formData.append("token", session.token || "");
-    formData.append("email", session.email || "");
-    formData.append("first_name", session.firstName || "");
-    try {
-      const response = await axios__WEBPACK_IMPORTED_MODULE_2__["default"].post(`/wp-json/hrsc/v1/support-cases/${supportCaseId}/upload`, formData, {
-        headers: {
-          "X-WP-Nonce": window.hrscChatVars?.nonce
-          // Do NOT manually set Content-Type for FormData – let the browser handle it
+    const fileArray = Array.from(files);
+    for (const file of fileArray) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("token", session.token || "");
+      formData.append("email", session.email || "");
+      formData.append("first_name", session.firstName || "");
+      try {
+        const response = await axios__WEBPACK_IMPORTED_MODULE_2__["default"].post(`/wp-json/hrsc/v1/support-cases/${supportCaseId}/upload`, formData, {
+          headers: {
+            "X-WP-Nonce": window.hrscChatVars?.nonce
+          }
+        });
+        if (response.data.success) {
+          onUploadSuccess?.(response.data);
         }
-      });
-      if (response.data.success) {
-        onUploadSuccess?.(response.data);
+      } catch (error) {
+        console.error("❌ File upload failed:", error.response?.data || error.message);
       }
-    } catch (error) {
-      console.error("❌ File upload failed:", error.response?.data || error.message);
     }
   };
   const handleDrop = e => {
@@ -477,7 +479,8 @@ const FileUploader = ({
     style: {
       display: "none"
     },
-    onChange: handleFileChange
+    onChange: e => handleFiles(e.target.files),
+    multiple: true
   }));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (FileUploader);

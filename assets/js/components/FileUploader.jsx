@@ -8,26 +8,26 @@ const FileUploader = ({ supportCaseId, onUploadSuccess }) => {
 	const fileInputRef = useRef();
 
 	const handleFiles = async (files) => {
-		const formData = new FormData();
-		formData.append("file", files[0]);
+		const fileArray = Array.from(files);
+		for (const file of fileArray) {
+			const formData = new FormData();
+			formData.append("file", file);
+			formData.append("token", session.token || "");
+			formData.append("email", session.email || "");
+			formData.append("first_name", session.firstName || "");
 
-		// ✅ Add auth parameters for token-based users
-		formData.append("token", session.token || "");
-		formData.append("email", session.email || "");
-		formData.append("first_name", session.firstName || "");
-
-		try {
-			const response = await axios.post(`/wp-json/hrsc/v1/support-cases/${supportCaseId}/upload`, formData, {
-				headers: {
-					"X-WP-Nonce": window.hrscChatVars?.nonce
-					// Do NOT manually set Content-Type for FormData – let the browser handle it
+			try {
+				const response = await axios.post(`/wp-json/hrsc/v1/support-cases/${supportCaseId}/upload`, formData, {
+					headers: {
+						"X-WP-Nonce": window.hrscChatVars?.nonce
+					}
+				});
+				if (response.data.success) {
+					onUploadSuccess?.(response.data);
 				}
-			});
-			if (response.data.success) {
-				onUploadSuccess?.(response.data);
+			} catch (error) {
+				console.error("❌ File upload failed:", error.response?.data || error.message);
 			}
-		} catch (error) {
-			console.error("❌ File upload failed:", error.response?.data || error.message);
 		}
 	};
 
@@ -76,7 +76,13 @@ const FileUploader = ({ supportCaseId, onUploadSuccess }) => {
 			<button onClick={handleClick} style={{ fontSize: "24px", cursor: "pointer" }}>
 				+
 			</button>
-			<input type="file" ref={fileInputRef} style={{ display: "none" }} onChange={handleFileChange} />
+			<input
+				type="file"
+				ref={fileInputRef}
+				style={{ display: "none" }}
+				onChange={(e) => handleFiles(e.target.files)}
+				multiple
+			/>
 		</div>
 	);
 };

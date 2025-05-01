@@ -1,14 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 
-const ChatAttachments = ({ supportCaseId }) => {
-	const [attachments, setAttachments] = useState([]);
-
+const ChatAttachments = ({ supportCaseId, attachments, setAttachments }) => {
 	useEffect(() => {
-		if (!supportCaseId) return;
+		if (!supportCaseId || attachments.length > 0) return;
 
 		const fetchAttachments = async () => {
 			try {
-				const res = await fetch(`/wp-json/wp/v2/media?parent=${supportCaseId}`);
+				const res = await fetch(`/wp-json/hrsc/v1/support-cases/${supportCaseId}/attachments`);
 				const data = await res.json();
 				setAttachments(data);
 			} catch (err) {
@@ -17,7 +15,7 @@ const ChatAttachments = ({ supportCaseId }) => {
 		};
 
 		fetchAttachments();
-	}, [supportCaseId]);
+	}, [supportCaseId, attachments, setAttachments]);
 
 	if (!attachments.length) return null;
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import ChatWindow from "./ChatWindow";
 import ChatAttachments from "./ChatAttachments";
@@ -13,20 +13,19 @@ const getQueryParam = (name) => {
 
 const Chat = ({ selectedCaseId, onSelectCase }) => {
 	const [caseId, setCaseId] = useState(selectedCaseId || null);
+	const [attachments, setAttachments] = useState([]);
+
 	const { session } = useAuthSession();
 	const { cases } = useSupportCases(session);
 	const { messages, refreshMessages, loading } = useMessages(caseId);
 
-	// Detect ?case_id and ?hr_mode from query string
 	useEffect(() => {
 		const paramId = getQueryParam("case_id");
-
 		if (paramId && /^\d+$/.test(paramId)) {
 			setCaseId(parseInt(paramId, 10));
 		}
 	}, []);
 
-	// Auto-select first case if not loaded from query string
 	useEffect(() => {
 		if (!caseId && cases.length > 0) {
 			setCaseId(cases[0].id);
@@ -37,6 +36,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	const handleSelectCase = (id) => {
 		setCaseId(id);
 		onSelectCase?.(id);
+		setAttachments([]); // reset attachments when changing case
 	};
 
 	if (!session) return null;
@@ -44,11 +44,16 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	return (
 		<div className={styles.container}>
 			<Sidebar onSelectCase={handleSelectCase} selectedCaseId={caseId} />
-
 			<div className={styles.main}>
-				<ChatAttachments supportCaseId={caseId} />
-
-				<ChatWindow caseId={caseId} messages={messages} refreshMessages={refreshMessages} loading={loading} />
+				<ChatAttachments supportCaseId={caseId} attachments={attachments} setAttachments={setAttachments} />
+				<ChatWindow
+					caseId={caseId}
+					messages={messages}
+					refreshMessages={refreshMessages}
+					loading={loading}
+					attachments={attachments}
+					setAttachments={setAttachments}
+				/>
 			</div>
 		</div>
 	);

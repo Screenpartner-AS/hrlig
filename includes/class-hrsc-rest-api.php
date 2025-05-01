@@ -45,6 +45,19 @@ class HRSC_REST_API
             'callback' => [self::class, 'hrsc_handle_file_upload'],
             'permission_callback' => '__return_true'
         ]);
+
+        register_rest_route('hrsc/v1', '/support-cases/(?P<id>\d+)/attachments', [
+            'methods' => 'GET',
+            'callback' => [self::class, 'get_attachments'],
+            'args' => [
+                'id' => [
+                    'required' => true,
+                    'type' => 'integer',
+                ],
+            ],
+            'permission_callback' => '__return_true', // ⚠ adjust this later
+        ]);
+
     }
 
     // --------------------------
@@ -360,5 +373,29 @@ class HRSC_REST_API
             'attachment_id' => $attach_id,
             'url' => wp_get_attachment_url($attach_id),
         ];
+    }
+
+    public static function get_attachments($request)
+    {
+        $parent_id = $request['id'];
+
+        $attachments = get_children([
+            'post_parent' => $parent_id,
+            'post_type' => 'attachment',
+            'post_status' => 'inherit',
+            'posts_per_page' => -1,
+        ]);
+
+        $response = [];
+
+        foreach ($attachments as $attachment) {
+            $response[] = [
+                'id' => $attachment->ID,
+                'title' => get_the_title($attachment->ID),
+                'source_url' => wp_get_attachment_url($attachment->ID),
+            ];
+        }
+
+        return rest_ensure_response($response);
     }
 }

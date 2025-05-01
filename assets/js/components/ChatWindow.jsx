@@ -1,15 +1,14 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import MessageInput from "./MessageInput";
 import FileUploader from "./FileUploader";
 import SessionContext from "../contexts/SessionContext";
 import styles from "../styles/ChatWindow.module.css";
 
-const ChatWindow = ({ caseId, messages, refreshMessages, loading }) => {
+const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, setAttachments }) => {
 	const { session } = useContext(SessionContext);
 	const messagesEndRef = useRef(null);
 	const [firstLoadDone, setFirstLoadDone] = useState(false);
 	const [statusMessage, setStatusMessage] = useState(null);
-	const [attachments, setAttachments] = useState([]);
 
 	const refreshAndMarkReady = async () => {
 		await refreshMessages(caseId, session);
@@ -58,19 +57,15 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading }) => {
 				setStatusMessage(null);
 			}
 		};
-
 		const handleOnline = () => {
 			if (document.visibilityState === "visible") {
 				setStatusMessage(null);
 			}
 		};
-
 		document.addEventListener("visibilitychange", handleVisibilityChange);
 		window.addEventListener("online", handleOnline);
 		window.addEventListener("offline", () => setStatusMessage("You are offline"));
-
 		handleVisibilityChange();
-
 		return () => {
 			document.removeEventListener("visibilitychange", handleVisibilityChange);
 			window.removeEventListener("online", handleOnline);
@@ -78,8 +73,14 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading }) => {
 		};
 	}, []);
 
-	const handleUploadSuccess = (attachment) => {
-		setAttachments((prev) => [...prev, attachment]);
+	const handleUploadSuccess = async (attachment) => {
+		try {
+			const res = await fetch(`/wp-json/wp/v2/media?parent=${caseId}`);
+			const data = await res.json();
+			setAttachments(data);
+		} catch (err) {
+			console.error("Failed to refresh attachments after upload", err);
+		}
 	};
 
 	if (!caseId) {
@@ -90,29 +91,12 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading }) => {
 		<div className={styles.chatContainer}>
 			<div className={styles.messagesArea}>
 				<div className={styles.messagesWrapper}>
-					{attachments.length > 0 && (
-						<div className={styles.attachments}>
-							<h4>Attachments</h4>
-							<ul>
-								{attachments.map((att) => (
-									<li key={att.id}>
-										<a href={att.source_url} target="_blank" rel="noopener noreferrer">
-											{att.title?.rendered || "Attachment"}
-										</a>
-									</li>
-								))}
-							</ul>
-						</div>
-					)}
-
 					{!firstLoadDone ? (
 						<p className={styles.loadingText}>Loading conversation…</p>
 					) : messages.length === 0 ? (
 						<p className={styles.emptyText}>No messages yet. Start the conversation!</p>
 					) : null}
-
 					{statusMessage && <div className={styles.statusMessage}>{statusMessage}</div>}
-
 					{messages.map((msg, idx) => {
 						if (msg.is_system) {
 							return (
@@ -121,9 +105,7 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading }) => {
 								</div>
 							);
 						}
-
 						const bubbleClass = msg.is_hr ? styles.hrBubble : styles.userBubble;
-
 						return (
 							<div key={idx} className={styles.messageRow}>
 								<div className={`${styles.bubble} ${bubbleClass}`}>
@@ -132,11 +114,9 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading }) => {
 							</div>
 						);
 					})}
-
 					<div ref={messagesEndRef} />
 				</div>
 			</div>
-
 			<div className={styles.inputBar}>
 				<FileUploader supportCaseId={caseId} onUploadSuccess={handleUploadSuccess} />
 				<div className={styles.inputWrapper}>
