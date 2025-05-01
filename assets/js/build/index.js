@@ -6013,7 +6013,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
- // Tailwind + custom styles
 
 document.addEventListener("DOMContentLoaded", () => {
   const rootEl = document.getElementById("hr-support-chat-app");
