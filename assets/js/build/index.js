@@ -103,14 +103,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _Sidebar__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Sidebar */ "./assets/js/components/Sidebar.jsx");
 /* harmony import */ var _ChatWindow__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ChatWindow */ "./assets/js/components/ChatWindow.jsx");
-/* harmony import */ var _ChatAttachments__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./ChatAttachments */ "./assets/js/components/ChatAttachments.jsx");
-/* harmony import */ var _hooks_useMessages__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../hooks/useMessages */ "./assets/js/hooks/useMessages.js");
-/* harmony import */ var _hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../hooks/useSupportCases */ "./assets/js/hooks/useSupportCases.js");
-/* harmony import */ var _hooks_useAuthSession__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../hooks/useAuthSession */ "./assets/js/hooks/useAuthSession.js");
-/* harmony import */ var _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../styles/Chat.module.css */ "./assets/js/styles/Chat.module.css");
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
+/* harmony import */ var _ChatHeader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./ChatHeader */ "./assets/js/components/ChatHeader.jsx");
+/* harmony import */ var _ChatAttachments__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./ChatAttachments */ "./assets/js/components/ChatAttachments.jsx");
+/* harmony import */ var _ChatInfo__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./ChatInfo */ "./assets/js/components/ChatInfo.jsx");
+/* harmony import */ var _hooks_useMessages__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../hooks/useMessages */ "./assets/js/hooks/useMessages.js");
+/* harmony import */ var _hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../hooks/useSupportCases */ "./assets/js/hooks/useSupportCases.js");
+/* harmony import */ var _hooks_useAuthSession__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../hooks/useAuthSession */ "./assets/js/hooks/useAuthSession.js");
+/* harmony import */ var _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../styles/Chat.module.css */ "./assets/js/styles/Chat.module.css");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
 
-// File: assets/js/components/Chat.jsx
+
 
 
 
@@ -131,18 +133,22 @@ const Chat = ({
   const [caseId, setCaseId] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(selectedCaseId || null);
   const [attachments, setAttachments] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   const [dragActive, setDragActive] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [uploading, setUploading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [showAttachments, setShowAttachments] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [showInfo, setShowInfo] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [supportCase, setSupportCase] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const dropRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const {
     session
-  } = (0,_hooks_useAuthSession__WEBPACK_IMPORTED_MODULE_6__["default"])();
+  } = (0,_hooks_useAuthSession__WEBPACK_IMPORTED_MODULE_8__["default"])();
   const {
     cases
-  } = (0,_hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_5__["default"])(session);
+  } = (0,_hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_7__["default"])(session);
   const {
     messages,
     refreshMessages,
     loading
-  } = (0,_hooks_useMessages__WEBPACK_IMPORTED_MODULE_4__["default"])(caseId);
+  } = (0,_hooks_useMessages__WEBPACK_IMPORTED_MODULE_6__["default"])(caseId);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const paramId = getQueryParam("case_id");
     if (paramId && /^\d+$/.test(paramId)) {
@@ -155,6 +161,15 @@ const Chat = ({
       onSelectCase?.(cases[0].id);
     }
   }, [caseId, cases, onSelectCase]);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    if (!caseId) return;
+    const fetchCase = async () => {
+      const res = await fetch(`/wp-json/wp/v2/support_case/${caseId}`);
+      const data = await res.json();
+      setSupportCase(data);
+    };
+    fetchCase();
+  }, [caseId]);
   const handleSelectCase = id => {
     setCaseId(id);
     onSelectCase?.(id);
@@ -179,7 +194,9 @@ const Chat = ({
     }
   };
   const handleFiles = async files => {
+    if (!session || !caseId) return;
     const fileArray = Array.from(files);
+    setUploading(true);
     for (const file of fileArray) {
       const formData = new FormData();
       formData.append("file", file);
@@ -187,7 +204,7 @@ const Chat = ({
       formData.append("email", session.email || "");
       formData.append("first_name", session.firstName || "");
       try {
-        const response = await axios__WEBPACK_IMPORTED_MODULE_8__["default"].post(`/wp-json/hrsc/v1/support-cases/${caseId}/upload`, formData, {
+        const response = await axios__WEBPACK_IMPORTED_MODULE_10__["default"].post(`/wp-json/hrsc/v1/support-cases/${caseId}/upload`, formData, {
           headers: {
             "X-WP-Nonce": window.hrscChatVars?.nonce
           }
@@ -201,29 +218,43 @@ const Chat = ({
         console.error("Upload failed:", error);
       }
     }
+    setUploading(false);
   };
   if (!session) return null;
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_7__["default"].container
+    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].container
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_Sidebar__WEBPACK_IMPORTED_MODULE_1__["default"], {
     onSelectCase: handleSelectCase,
     selectedCaseId: caseId
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_7__["default"].main,
+    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].main,
     ref: dropRef,
     onDragOver: handleDragOver,
     onDragEnter: handleDragEnter,
     onDragLeave: handleDragLeave,
     onDrop: handleDrop
-  }, dragActive && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "chat-drag-overlay"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "chat-drag-message"
-  }, "Drop files to upload")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatAttachments__WEBPACK_IMPORTED_MODULE_3__["default"], {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatHeader__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    onToggleInfo: () => {
+      setShowInfo(prev => !prev);
+      setShowAttachments(false);
+    },
+    onToggleAttachments: () => {
+      setShowAttachments(prev => !prev);
+      setShowInfo(false);
+    },
+    showAttachments: showAttachments,
+    uploading: uploading
+  }), showAttachments && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdown
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatAttachments__WEBPACK_IMPORTED_MODULE_4__["default"], {
     supportCaseId: caseId,
     attachments: attachments,
     setAttachments: setAttachments
-  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatWindow__WEBPACK_IMPORTED_MODULE_2__["default"], {
+  })), showInfo && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdown
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatInfo__WEBPACK_IMPORTED_MODULE_5__["default"], {
+    supportCase: supportCase
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatWindow__WEBPACK_IMPORTED_MODULE_2__["default"], {
     caseId: caseId,
     messages: messages,
     refreshMessages: refreshMessages,
@@ -272,11 +303,7 @@ const ChatAttachments = ({
   }, [supportCaseId, attachments, setAttachments]);
   if (!attachments.length) return null;
   console.log("Attachments:", attachments);
-  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    style: {
-      padding: "1rem 0"
-    }
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h4", null, "Attachments"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h4", null, "Case Files"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatAttachments_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].attachment_list
   }, attachments.map(file => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
     className: _styles_ChatAttachments_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].attachment_item,
@@ -290,6 +317,119 @@ const ChatAttachments = ({
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, file.title)))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ChatAttachments);
+
+/***/ }),
+
+/***/ "./assets/js/components/ChatHeader.jsx":
+/*!*********************************************!*\
+  !*** ./assets/js/components/ChatHeader.jsx ***!
+  \*********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../styles/ChatHeader.module.css */ "./assets/js/styles/ChatHeader.module.css");
+
+
+
+const ChatHeader = ({
+  onToggleInfo,
+  onToggleAttachments,
+  showAttachments,
+  uploading
+}) => {
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].header
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].title
+  }, "Support Chat"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].actions
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    onClick: onToggleInfo,
+    title: "Toggle Info",
+    className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].iconButton
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("svg", {
+    xmlns: "http://www.w3.org/2000/svg",
+    viewBox: "-0.625 -0.625 20 20",
+    fill: "none",
+    stroke: "#000000",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+    class: "feather feather-info",
+    id: "Info--Streamline-Feather",
+    height: "20",
+    width: "20"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
+    d: "M1.5625 9.375a7.8125 7.8125 0 1 0 15.625 0 7.8125 7.8125 0 1 0 -15.625 0",
+    "stroke-width": "1.25"
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
+    d: "m9.375 12.5 0 -3.125",
+    "stroke-width": "1.25"
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
+    d: "m9.375 6.25 0.0078125 0",
+    "stroke-width": "1.25"
+  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    onClick: onToggleAttachments,
+    title: "Toggle Attachments",
+    className: `${_styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].iconButton} ${showAttachments ? _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].active : ""}`
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("svg", {
+    xmlns: "http://www.w3.org/2000/svg",
+    viewBox: "-0.625 -0.625 20 20",
+    fill: "none",
+    stroke: "#000000",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+    class: "feather feather-upload-cloud",
+    id: "Upload-Cloud--Streamline-Feather",
+    height: "20",
+    width: "20"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
+    d: "m12.5 12.5 -3.125 -3.125 -3.125 3.125",
+    "stroke-width": "1.25"
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
+    d: "m9.375 9.375 0 7.03125",
+    "stroke-width": "1.25"
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
+    d: "M15.9296875 14.3671875A3.90625 3.90625 0 0 0 14.0625 7.03125h-0.984375A6.25 6.25 0 1 0 2.34375 12.734375",
+    "stroke-width": "1.25"
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
+    d: "m12.5 12.5 -3.125 -3.125 -3.125 3.125",
+    "stroke-width": "1.25"
+  })), uploading && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+    className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].badge
+  }))));
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ChatHeader);
+
+/***/ }),
+
+/***/ "./assets/js/components/ChatInfo.jsx":
+/*!*******************************************!*\
+  !*** ./assets/js/components/ChatInfo.jsx ***!
+  \*******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+
+
+const ChatInfo = ({
+  supportCase
+}) => {
+  if (!supportCase) {
+    return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Loading case information\u2026");
+  }
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h4", null, "Case Info"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, "Case ID:"), " ", supportCase.id), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, "Status:"), " ", supportCase.status), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, "Created:"), " ", new Date(supportCase.date).toLocaleString()), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, "Author:"), " ", supportCase.author_name)));
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ChatInfo);
 
 /***/ }),
 
@@ -1089,7 +1229,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 // extracted by mini-css-extract-plugin
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"container":"Chat-module__container__n_3Bx","main":"Chat-module__main__E04Xs"});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"container":"Chat-module__container__n_3Bx","main":"Chat-module__main__E04Xs","dropdown":"Chat-module__dropdown__o1BY9","dropdown-fade":"Chat-module__dropdown-fade__NHgez"});
 
 /***/ }),
 
@@ -1105,6 +1245,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 // extracted by mini-css-extract-plugin
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"attachment_list":"ChatAttachments-module__attachment_list__MxiIv","attachment_item":"ChatAttachments-module__attachment_item__FS6wT"});
+
+/***/ }),
+
+/***/ "./assets/js/styles/ChatHeader.module.css":
+/*!************************************************!*\
+  !*** ./assets/js/styles/ChatHeader.module.css ***!
+  \************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+// extracted by mini-css-extract-plugin
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"header":"ChatHeader-module__header__wGwua","title":"ChatHeader-module__title__gOMPk","actions":"ChatHeader-module__actions___SiF3","iconButton":"ChatHeader-module__iconButton__oqsIe","active":"ChatHeader-module__active__ZB1r_","badge":"ChatHeader-module__badge__t2lic","pulse":"ChatHeader-module__pulse__r_COJ"});
 
 /***/ }),
 

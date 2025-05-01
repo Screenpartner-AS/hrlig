@@ -6,12 +6,39 @@
 }
 
 .main {
-	background-color: #f9fafb;
 	display: flex;
 	flex-direction: column;
-	max-height: 100vh;
-	overflow-y: auto;
-	height: 100vh;
+	flex: 1;
 	position: relative;
+	background-color: #f9f9f9;
+	height: 100vh;
+	overflow: hidden;
 	width: calc(100% - 260px);
+}
+
+.dropdown {
+	position: absolute;
+	top: calc(53px + 20px);
+	right: 20px;
+	width: 260px;
+	z-index: 9;
+	padding: 12px 16px;
+	border-radius: 20px;
+	border: 1px solid #d1d5db;
+	background-color: #fff;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+	max-height: 60vh;
+	overflow-y: auto;
+	animation: dropdown-fade 0.2s ease-in-out;
+}
+
+@keyframes dropdown-fade {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }

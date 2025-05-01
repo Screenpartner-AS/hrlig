@@ -1,0 +1,72 @@
+.header {
+	position: sticky;
+	top: 0;
+	background: #fff;
+	padding: 0.5rem 1rem;
+	border-bottom: 1px solid #ddd;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	z-index: 10;
+}
+
+.title {
+	font-weight: 600;
+	font-size: 1.1rem;
+}
+
+.actions {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.iconButton {
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 1.3rem;
+	position: relative;
+	color: #444;
+	transition: color 0.2s ease-in-out;
+	width: 36px;
+	height: 36px;
+	line-height: 0;
+	background: #f1f1f1;
+	padding: 1px;
+	border-radius: 50%;
+}
+
+.iconButton:hover {
+	color: #0073aa;
+}
+
+.active {
+	color: #0073aa;
+}
+
+.badge {
+	position: absolute;
+	top: 2px;
+	right: 2px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background-color: #0073aa;
+	animation: pulse 1.2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+	0% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	50% {
+		transform: scale(1.5);
+		opacity: 0.5;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+}

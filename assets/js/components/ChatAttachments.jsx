@@ -23,8 +23,8 @@ const ChatAttachments = ({ supportCaseId, attachments, setAttachments }) => {
 	console.log("Attachments:", attachments);
 
 	return (
-		<div style={{ padding: "1rem 0" }}>
-			<h4>Attachments</h4>
+		<div>
+			<h4>Case Files</h4>
 			<div className={styles.attachment_list}>
 				{attachments.map((file) => (
 					<a

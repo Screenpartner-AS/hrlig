@@ -1,9 +1,9 @@
-// File: assets/js/components/Chat.jsx
-
 import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "./Sidebar";
 import ChatWindow from "./ChatWindow";
+import ChatHeader from "./ChatHeader";
 import ChatAttachments from "./ChatAttachments";
+import ChatInfo from "./ChatInfo";
 import useMessages from "../hooks/useMessages";
 import useSupportCases from "../hooks/useSupportCases";
 import useAuthSession from "../hooks/useAuthSession";
@@ -18,6 +18,11 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	const [caseId, setCaseId] = useState(selectedCaseId || null);
 	const [attachments, setAttachments] = useState([]);
 	const [dragActive, setDragActive] = useState(false);
+	const [uploading, setUploading] = useState(false);
+	const [showAttachments, setShowAttachments] = useState(false);
+	const [showInfo, setShowInfo] = useState(false);
+	const [supportCase, setSupportCase] = useState(null);
+
 	const dropRef = useRef(null);
 
 	const { session } = useAuthSession();
@@ -37,6 +42,16 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 			onSelectCase?.(cases[0].id);
 		}
 	}, [caseId, cases, onSelectCase]);
+
+	useEffect(() => {
+		if (!caseId) return;
+		const fetchCase = async () => {
+			const res = await fetch(`/wp-json/wp/v2/support_case/${caseId}`);
+			const data = await res.json();
+			setSupportCase(data);
+		};
+		fetchCase();
+	}, [caseId]);
 
 	const handleSelectCase = (id) => {
 		setCaseId(id);
@@ -67,7 +82,10 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	};
 
 	const handleFiles = async (files) => {
+		if (!session || !caseId) return;
 		const fileArray = Array.from(files);
+		setUploading(true);
+
 		for (const file of fileArray) {
 			const formData = new FormData();
 			formData.append("file", file);
@@ -90,6 +108,8 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 				console.error("Upload failed:", error);
 			}
 		}
+
+		setUploading(false);
 	};
 
 	if (!session) return null;
@@ -97,6 +117,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	return (
 		<div className={styles.container}>
 			<Sidebar onSelectCase={handleSelectCase} selectedCaseId={caseId} />
+
 			<div
 				className={styles.main}
 				ref={dropRef}
@@ -105,12 +126,31 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 				onDragLeave={handleDragLeave}
 				onDrop={handleDrop}
 			>
-				{dragActive && (
-					<div className="chat-drag-overlay">
-						<div className="chat-drag-message">Drop files to upload</div>
+				<ChatHeader
+					onToggleInfo={() => {
+						setShowInfo((prev) => !prev);
+						setShowAttachments(false);
+					}}
+					onToggleAttachments={() => {
+						setShowAttachments((prev) => !prev);
+						setShowInfo(false);
+					}}
+					showAttachments={showAttachments}
+					uploading={uploading}
+				/>
+
+				{showAttachments && (
+					<div className={styles.dropdown}>
+						<ChatAttachments supportCaseId={caseId} attachments={attachments} setAttachments={setAttachments} />
 					</div>
 				)}
-				<ChatAttachments supportCaseId={caseId} attachments={attachments} setAttachments={setAttachments} />
+
+				{showInfo && (
+					<div className={styles.dropdown}>
+						<ChatInfo supportCase={supportCase} />
+					</div>
+				)}
+
 				<ChatWindow
 					caseId={caseId}
 					messages={messages}
