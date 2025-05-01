@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import ChatWindow from "./ChatWindow";
+import ChatAttachments from "./ChatAttachments";
 import useMessages from "../hooks/useMessages";
 import useSupportCases from "../hooks/useSupportCases";
 import useAuthSession from "../hooks/useAuthSession";
@@ -42,10 +43,13 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 
 	return (
 		<div className={styles.container}>
-			{/* ✅ Show sidebar for both HR and employees */}
 			<Sidebar onSelectCase={handleSelectCase} selectedCaseId={caseId} />
 
-			<ChatWindow caseId={caseId} messages={messages} refreshMessages={refreshMessages} loading={loading} />
+			<div className={styles.main}>
+				<ChatAttachments supportCaseId={caseId} />
+
+				<ChatWindow caseId={caseId} messages={messages} refreshMessages={refreshMessages} loading={loading} />
+			</div>
 		</div>
 	);
 };

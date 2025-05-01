@@ -39,6 +39,21 @@ class HRSC_REST_API
                 return current_user_can('edit_support_cases');
             },
         ]);
+
+        register_rest_route('hrsc/v1', '/support-cases/(?P<id>\d+)/upload', [
+            'methods' => 'POST',
+            'callback' => 'hrsc_handle_file_upload',
+            'permission_callback' => function () {
+                return current_user_can('upload_files');
+            },
+            'args' => [
+                'file' => [
+                    'required' => true,
+                    'description' => 'File to upload.',
+                    'type' => 'file',
+                ],
+            ],
+        ]);
     }
 
     // --------------------------
@@ -281,6 +296,48 @@ class HRSC_REST_API
             'success' => true,
             'post_id' => $post_id,
             'token' => $anonymous ? $token : null,
+        ];
+    }
+
+    public static function hrsc_handle_file_upload($request)
+    {
+        $post_id = $request['id'];
+
+        if (!get_post($post_id)) {
+            return new WP_Error('not_found', __('Support case not found.', 'hr-support-chat'), ['status' => 404]);
+        }
+
+        if (empty($_FILES['file'])) {
+            return new WP_Error('no_file', __('No file provided.', 'hr-support-chat'), ['status' => 400]);
+        }
+
+        $file = $_FILES['file'];
+
+        // Use WordPress functions to handle the upload
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        $upload = wp_handle_upload($file, ['test_form' => false]);
+
+        if (isset($upload['error'])) {
+            return new WP_Error('upload_error', $upload['error'], ['status' => 500]);
+        }
+
+        // Create attachment post
+        $attachment = [
+            'post_mime_type' => $upload['type'],
+            'post_title' => sanitize_file_name($file['name']),
+            'post_content' => '',
+            'post_status' => 'inherit',
+        ];
+
+        $attach_id = wp_insert_attachment($attachment, $upload['file'], $post_id);
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+        $attach_data = wp_generate_attachment_metadata($attach_id, $upload['file']);
+        wp_update_attachment_metadata($attach_id, $attach_data);
+
+        return [
+            'success' => true,
+            'attachment_id' => $attach_id,
+            'url' => wp_get_attachment_url($attach_id),
         ];
     }
 }
