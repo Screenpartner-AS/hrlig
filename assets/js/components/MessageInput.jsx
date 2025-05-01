@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
 import SessionContext from "../contexts/SessionContext";
 import { apiFetch } from "../api/apiClient";
+import styles from "../styles/MessageInput.module.css";
 
 const MessageInput = ({ caseId, refreshMessages }) => {
 	const [message, setMessage] = useState("");
@@ -31,7 +32,7 @@ const MessageInput = ({ caseId, refreshMessages }) => {
 				token: session.token,
 				email: session.email,
 				first_name: session.firstName,
-				website: "" // honeypot
+				website: ""
 			});
 
 			setMessage("");
@@ -58,27 +59,22 @@ const MessageInput = ({ caseId, refreshMessages }) => {
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="w-full">
-			<div className="flex items-end rounded-[28px] border border-gray-300 bg-white shadow-md px-4 py-3 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+		<form onSubmit={handleSubmit} className={styles.form}>
+			<div className={styles.inputWrapper}>
 				<textarea
 					ref={textareaRef}
 					value={message}
 					onChange={handleChange}
 					onKeyDown={handleKeyDown}
 					placeholder="Type your message..."
-					className="flex-1 resize-none text-base placeholder-gray-400 bg-transparent border-0 focus:ring-0 focus:outline-none min-h-[48px] max-h-[300px] overflow-y-auto"
+					className={styles.textarea}
 					rows={1}
 				/>
-
 				<button
 					type="submit"
-					id="composer-submit-button"
-					aria-label="Send message"
 					disabled={sending || !message.trim()}
-					className="flex items-center justify-center rounded-full h-9 w-9 transition-colors 
-						bg-black text-white hover:opacity-70 disabled:bg-gray-300 disabled:text-white 
-						dark:bg-white dark:text-black dark:disabled:bg-zinc-500 focus-visible:outline-none 
-						focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black ml-3"
+					aria-label="Send message"
+					className={styles.sendButton}
 				>
 					<svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
 						<path

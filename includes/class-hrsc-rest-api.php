@@ -8,31 +8,31 @@ class HRSC_REST_API
 
     public static function register_routes()
     {
-        register_rest_route('hrsc/v1', '/support-cases', [
+        register_rest_route('hrsc/v1', 'support-cases', [
             'methods' => 'GET',
             'callback' => [self::class, 'get_support_cases'],
             'permission_callback' => '__return_true',
         ]);
 
-        register_rest_route('hrsc/v1', '/support-cases', [
+        register_rest_route('hrsc/v1', 'support-cases', [
             'methods' => 'POST',
             'callback' => [self::class, 'create_support_case'],
             'permission_callback' => '__return_true',
         ]);
 
-        register_rest_route('hrsc/v1', '/support-cases/(?P<id>\d+)/messages', [
+        register_rest_route('hrsc/v1', 'support-cases/(?P<id>\d+)/messages', [
             'methods' => 'GET',
             'callback' => [self::class, 'get_case_messages'],
             'permission_callback' => '__return_true',
         ]);
 
-        register_rest_route('hrsc/v1', '/support-cases/(?P<id>\d+)/messages', [
+        register_rest_route('hrsc/v1', 'support-cases/(?P<id>\d+)/messages', [
             'methods' => 'POST',
             'callback' => [self::class, 'post_case_message'],
             'permission_callback' => '__return_true',
         ]);
 
-        register_rest_route('hrsc/v1', '/support-cases/(?P<id>\d+)', [
+        register_rest_route('hrsc/v1', 'support-cases/(?P<id>\d+)', [
             'methods' => 'PATCH',
             'callback' => [self::class, 'patch_support_case'],
             'permission_callback' => function () {
@@ -172,21 +172,32 @@ class HRSC_REST_API
     public static function post_case_message($request)
     {
         $post_id = (int) $request['id'];
-        if (!get_post($post_id))
-            return new WP_Error('not_found', __('Case not found.', 'hr-support-chat'), ['status' => 404]);
 
+        if (!get_post($post_id)) {
+            return new WP_Error('not_found', __('Case not found.', 'hr-support-chat'), ['status' => 404]);
+        }
+
+        // Honeypot check
         $settings = get_option('hrsc_settings');
         $honeypot = sanitize_text_field($request->get_param($settings['honeypot_field'] ?? 'website'));
         if (!empty($honeypot)) {
             return new WP_Error('spam_detected', __('Spam detected.', 'hr-support-chat'), ['status' => 403]);
         }
 
-        if (!is_user_logged_in() && !self::validate_token($post_id)) {
-            return new WP_Error('unauthorized', __('Unauthorized.', 'hr-support-chat'), ['status' => 401]);
+        // 🔐 Authorization
+        if (is_user_logged_in()) {
+            if (!current_user_can('edit_support_cases')) {
+                return new WP_Error('unauthorized', 'HR advisor unauthorized.', ['status' => 403]);
+            }
+        } else {
+            if (!self::validate_token($post_id)) {
+                return new WP_Error('unauthorized', 'Invalid token or session.', ['status' => 401]);
+            }
         }
 
+        // 🧠 Rate limiting — only for token-based users
         $token = sanitize_text_field($request->get_param('token'));
-        if ($token && !self::rate_limit_check($token)) {
+        if (!is_user_logged_in() && $token && !self::rate_limit_check($token)) {
             return new WP_Error('rate_limited', __('Too many messages, slow down.', 'hr-support-chat'), ['status' => 429]);
         }
 
@@ -197,11 +208,11 @@ class HRSC_REST_API
             'comment_content' => $content,
             'user_id' => get_current_user_id(),
             'comment_approved' => 1,
-            'comment_type' => '', // user or HR message
         ]);
 
         return ['success' => true];
     }
+
 
     public static function patch_support_case($request)
     {

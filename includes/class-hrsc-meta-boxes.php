@@ -16,6 +16,15 @@ class HRSC_Meta_Boxes
             'side',
             'default'
         );
+
+        add_meta_box(
+            'hrsc_chat_interface',
+            __('Chat Interface', 'hr-support-chat'),
+            [__CLASS__, 'render_chat_button'],
+            'support_case',
+            'side',
+            'high'
+        );
     }
 
     public static function render_meta_box($post)
@@ -79,5 +88,17 @@ class HRSC_Meta_Boxes
         foreach ($fields as $key => $value) {
             update_post_meta($post_id, $key, $value);
         }
+    }
+
+    public static function render_chat_button($post)
+    {
+        $url = add_query_arg([
+            'case_id' => $post->ID,
+            'hr_mode' => 1,
+        ], site_url('/chat/'));
+
+        echo '<p><a href="' . esc_url($url) . '" target="_blank" class="button button-primary">';
+        esc_html_e('Open Chat Interface', 'hr-support-chat');
+        echo '</a></p>';
     }
 }

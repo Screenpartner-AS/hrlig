@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import MessageInput from "./MessageInput";
 import SessionContext from "../contexts/SessionContext";
+import styles from "../styles/ChatWindow.module.css";
 
 const ChatWindow = ({ caseId, messages, refreshMessages, loading }) => {
 	const { session } = useContext(SessionContext);
@@ -64,41 +65,39 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading }) => {
 	}, []);
 
 	if (!caseId) {
-		return <div className="flex-1 flex items-center justify-center text-gray-500">Select a case to view messages</div>;
+		return <div className={styles.placeholder}>Select a case to view messages</div>;
 	}
 
 	return (
-		<div className="flex flex-col h-screen bg-gray-50 relative">
-			<div className="flex-1 overflow-y-auto py-6 px-4">
-				<div className="mx-auto max-w-2xl space-y-6">
+		<div className={styles.chatContainer}>
+			<div className={styles.messagesArea}>
+				<div className={styles.messagesWrapper}>
 					{!firstLoadDone ? (
-						<p className="text-center text-sm text-gray-400 italic">Loading conversation…</p>
+						<p className={styles.loadingText}>Loading conversation…</p>
 					) : messages.length === 0 ? (
-						<p className="text-gray-400 text-center italic">No messages yet. Start the conversation!</p>
+						<p className={styles.emptyText}>No messages yet. Start the conversation!</p>
 					) : null}
 
-					{statusMessage && <div className="text-center text-xs text-yellow-600 italic">{statusMessage}</div>}
+					{statusMessage && <div className={styles.statusMessage}>{statusMessage}</div>}
 
 					{messages.map((msg, idx) => {
 						if (msg.is_system) {
 							return (
-								<div key={idx} className="text-center text-xs text-gray-400 italic">
+								<div key={idx} className={styles.systemMessage}>
 									{msg.content}
 								</div>
 							);
 						}
 
-						const bubbleClasses = msg.is_hr
-							? "bg-green-100 ml-auto text-gray-800"
-							: "bg-white mr-auto border text-gray-800";
+						const bubbleClass = msg.is_hr ? styles.hrBubble : styles.userBubble;
 
 						return (
-							<div key={idx} className="w-full">
-								<div className={`max-w-[80%] px-4 py-3 rounded-xl shadow-sm ${bubbleClasses}`}>
-									<p className="text-sm">{msg.content}</p>
-									<p className="text-[11px] text-gray-400 mt-1 text-right">
+							<div key={idx} className={styles.messageRow}>
+								<div className={`${styles.bubble} ${bubbleClass}`}>
+									<p>{msg.content}</p>
+									{/* <p className={styles.meta}>
 										{msg.author} • {new Date(msg.date).toLocaleTimeString()}
-									</p>
+									</p> */}
 								</div>
 							</div>
 						);
@@ -108,8 +107,8 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading }) => {
 				</div>
 			</div>
 
-			<div className="sticky bottom-0 bg-white border-t border-gray-200 w-full px-4 py-3">
-				<div className="max-w-2xl mx-auto">
+			<div className={styles.inputBar}>
+				<div className={styles.inputWrapper}>
 					<MessageInput caseId={caseId} refreshMessages={refreshMessages} />
 				</div>
 			</div>

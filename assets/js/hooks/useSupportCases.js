@@ -12,11 +12,18 @@ const useSupportCases = (session) => {
 
 			setLoading(true);
 			try {
-				const data = await apiFetch("/support-cases", "GET", null, {
-					token: session.token,
-					email: session.email,
-					first_name: session.firstName
-				});
+				// For HR advisors, fetch all — no query needed
+				let query = {};
+				if (!session.isHR) {
+					// For employees, use token/email combo
+					query = {
+						token: session.token,
+						email: session.email,
+						first_name: session.firstName
+					};
+				}
+
+				const data = await apiFetch("/support-cases", "GET", null, query);
 				setCases(data);
 			} catch (err) {
 				console.error("Failed to load support cases:", err);

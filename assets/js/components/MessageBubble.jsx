@@ -1,20 +1,20 @@
 import React from "react";
+import styles from "../styles/MessageBubble.module.css";
 
 const MessageBubble = ({ message }) => {
-	const isHR = message.is_hr;
-	const isSystem = message.is_system;
-
-	if (isSystem) {
-		return <div className="text-center text-xs text-gray-400 italic my-2">{message.content}</div>;
+	if (message.is_system) {
+		return <div className={styles.system}>{message.content}</div>;
 	}
 
-	const alignment = isHR ? "text-right ml-auto" : "text-left mr-auto";
-	const bg = isHR ? "bg-green-100" : "bg-white border";
+	const bubbleClass = message.is_hr ? styles.hr : styles.user;
+
 	return (
-		<div className={`max-w-[80%] ${alignment}`}>
-			<div className={`p-3 rounded-lg shadow-sm ${bg} text-sm`}>{message.content}</div>
-			<div className="text-[11px] text-gray-400 mt-1 text-right">
-				{message.author} • {new Date(message.date).toLocaleTimeString()}
+		<div className={`${styles.row} ${bubbleClass}`}>
+			<div className={styles.bubble}>
+				<p className={styles.content}>{message.content}</p>
+				{/* <p className={styles.meta}>
+					{message.author} • {new Date(message.date).toLocaleTimeString()}
+				</p> */}
 			</div>
 		</div>
 	);

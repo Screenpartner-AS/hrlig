@@ -34,20 +34,29 @@ add_action('admin_menu', ['HRSC_Settings_Page', 'register_settings_page']);
 add_action('admin_init', ['HRSC_Settings_Page', 'register_settings']);
 add_action('rest_api_init', ['HRSC_REST_API', 'register_routes']);
 
-wp_enqueue_script(
-    'hrsc-chat-app',
-    plugins_url('assets/js/build/index.js', __FILE__),
-    ['wp-element'],
-    '1.0.0',
-    true
-);
+add_action('wp_enqueue_scripts', function () {
+    if (is_page_template('hrsc-page-support-chat.php')) {
+        wp_enqueue_style(
+            'hrsc-chat-styles',
+            plugins_url('assets/js/build/index.css', __FILE__),
+            [],
+            '1.0.0'
+        );
+        wp_enqueue_script(
+            'hrsc-chat-app',
+            plugins_url('assets/js/build/index.js', __FILE__),
+            ['wp-element'],
+            '1.0.0',
+            true
+        );
 
-wp_enqueue_style(
-    'hrsc-chat-styles',
-    plugins_url('assets/js/build/index.css', __FILE__),
-    [],
-    '1.0.0'
-);
+        // Add REST URL + nonce
+        wp_localize_script('hrsc-chat-app', 'hrscChatVars', [
+            'restUrl' => esc_url_raw(rest_url('hrsc/v1')),
+            'nonce' => wp_create_nonce('wp_rest'),
+        ]);
+    }
+});
 
 add_action('hrsc_support_case_created_unassigned', 'hrsc_send_notification_email');
 
