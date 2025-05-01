@@ -73,10 +73,50 @@
 	position: sticky;
 	bottom: 0;
 	width: 100%;
-	padding: 0.75rem 1rem;
+	padding: 20px;
 }
 
 .inputWrapper {
 	max-width: 768px;
 	margin: 0 auto;
+	position: relative;
+}
+
+.dragOverlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(255, 255, 255, 0.85);
+	z-index: 50;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 2px dashed #aaa;
+	pointer-events: none;
+}
+
+.dragMessage {
+	font-size: 1.5rem;
+	color: #333;
+}
+
+.uploadButton {
+	border-radius: 36px;
+	height: 36px;
+	width: 36px;
+	line-height: 36px;
+	text-align: center;
+	font-size: 22px;
+	appearance: none;
+	box-shadow: none;
+	background: #f1f1f1;
+	outline: none;
+	border: none;
+	display: block;
+	border: 1px solid #d4d3d3;
+	position: absolute;
+	bottom: 12px;
+	left: 16px;
 }
