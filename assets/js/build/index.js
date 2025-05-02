@@ -139,14 +139,15 @@ const Chat = ({
   const [supportCase, setSupportCase] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const dropRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const {
-    session
+    session,
+    ready
   } = (0,_hooks_useAuthSession__WEBPACK_IMPORTED_MODULE_8__["default"])();
   const {
     cases,
     refreshCases,
     error,
     loading
-  } = (0,_hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_7__["default"])(session);
+  } = (0,_hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_7__["default"])(session, ready);
   const {
     messages,
     refreshMessages
@@ -1041,10 +1042,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../hooks/useSupportCases */ "./assets/js/hooks/useSupportCases.js");
-/* harmony import */ var _contexts_SessionContext__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../contexts/SessionContext */ "./assets/js/contexts/SessionContext.jsx");
-/* harmony import */ var _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../styles/Sidebar.module.css */ "./assets/js/styles/Sidebar.module.css");
-
+/* harmony import */ var _contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../contexts/SessionContext */ "./assets/js/contexts/SessionContext.jsx");
+/* harmony import */ var _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../styles/Sidebar.module.css */ "./assets/js/styles/Sidebar.module.css");
 
 
 
@@ -1057,56 +1056,47 @@ const Sidebar = ({
   loading,
   error
 }) => {
-  const {
-    session,
-    ready
-  } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(_contexts_SessionContext__WEBPACK_IMPORTED_MODULE_2__["default"]);
   const [filter, setFilter] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("All");
-  const filteredCases = cases.filter(c => filter === "All" ? true : c.status === filter);
-  const renderStatusDot = status => {
-    const statusClass = {
-      New: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusNew,
-      Ongoing: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusOngoing,
-      Closed: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusClosed
-    }[status] || _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusUnknown;
-    return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
-      className: `${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusDot} ${statusClass}`
-    });
-  };
+  const filteredCases = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
+    if (filter === "All") return cases;
+    return cases.filter(c => c.status === filter);
+  }, [cases, filter]);
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("aside", {
-    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].sidebar
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].sidebar
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
-    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].heading
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].heading
   }, "Support Cases"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].filterWrapper
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].filterWrapper
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("select", {
     id: "statusFilter",
     value: filter,
     onChange: e => setFilter(e.target.value),
-    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].filterSelect
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].filterSelect
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
     value: "All"
   }, "All"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
-    value: "New"
-  }, "New"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    value: "Open"
+  }, "Open"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
     value: "Ongoing"
   }, "Ongoing"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
     value: "Closed"
-  }, "Closed"))), loading && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
-    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].loading
-  }, "Loading\u2026"), error && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
-    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].error
-  }, error), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", {
-    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].caseList
+  }, "Closed"))), error && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].error
+  }, error), !cases.length && loading ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].loading
+  }, "Loading\u2026") : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", {
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].caseList
   }, filteredCases.map(c => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
     key: c.id,
     onClick: () => onSelectCase(c.id),
-    className: `${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].caseItem} ${c.id === selectedCaseId ? _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].active : ""}`
+    className: `${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].caseItem} ${c.id === selectedCaseId ? _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].active : ""}`
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].caseTitle
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].caseTitle
   }, c.title), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].caseStatus
-  }, renderStatusDot(c.status), c.status)))));
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].caseStatus
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+    className: `${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].statusDot} ${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"]["status" + c.status]}`
+  }), c.status)))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Sidebar);
 
@@ -1303,8 +1293,10 @@ const useSupportCases = (session, ready) => {
   const [cases, setCases] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   const [loading, setLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [error, setError] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+  const isFetching = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false); // to prevent multiple overlaps
+
   const fetchCases = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(async () => {
-    if (!session) return;
+    if (!ready || !session || isFetching.current) return;
     const isLoggedIn = session.isAdmin || session.isHR;
     const isAnonymous = !!session.token || !!session.email && !!session.firstName;
     if (!isLoggedIn && !isAnonymous) {
@@ -1312,6 +1304,7 @@ const useSupportCases = (session, ready) => {
       setError("Anonymous session missing token or identity.");
       return;
     }
+    isFetching.current = true;
     setLoading(true);
     try {
       const queryParams = {};
@@ -1329,13 +1322,12 @@ const useSupportCases = (session, ready) => {
       setError("Failed to load cases");
     } finally {
       setLoading(false);
+      isFetching.current = false;
     }
-  }, [session]);
+  }, [session, ready]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    if (ready) {
-      fetchCases();
-    }
-  }, [ready, fetchCases]);
+    fetchCases();
+  }, [fetchCases]);
   return {
     cases,
     loading,

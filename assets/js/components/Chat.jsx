@@ -25,8 +25,8 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 
 	const dropRef = useRef(null);
 
-	const { session } = useAuthSession();
-	const { cases, refreshCases, error, loading } = useSupportCases(session);
+	const { session, ready } = useAuthSession();
+	const { cases, refreshCases, error, loading } = useSupportCases(session, ready);
 	const { messages, refreshMessages } = useMessages(caseId);
 
 	// Utility: fetch full support case by ID

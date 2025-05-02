@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { apiFetch } from "../api/apiClient";
 
 const useSupportCases = (session, ready) => {
@@ -6,8 +6,10 @@ const useSupportCases = (session, ready) => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
 
+	const isFetching = useRef(false); // to prevent multiple overlaps
+
 	const fetchCases = useCallback(async () => {
-		if (!session) return;
+		if (!ready || !session || isFetching.current) return;
 
 		const isLoggedIn = session.isAdmin || session.isHR;
 		const isAnonymous = !!session.token || (!!session.email && !!session.firstName);
@@ -18,6 +20,7 @@ const useSupportCases = (session, ready) => {
 			return;
 		}
 
+		isFetching.current = true;
 		setLoading(true);
 
 		try {
@@ -39,14 +42,13 @@ const useSupportCases = (session, ready) => {
 			setError("Failed to load cases");
 		} finally {
 			setLoading(false);
+			isFetching.current = false;
 		}
-	}, [session]);
+	}, [session, ready]);
 
 	useEffect(() => {
-		if (ready) {
-			fetchCases();
-		}
-	}, [ready, fetchCases]);
+		fetchCases();
+	}, [fetchCases]);
 
 	return {
 		cases,
