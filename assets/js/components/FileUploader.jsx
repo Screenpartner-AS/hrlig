@@ -1,5 +1,6 @@
 import React, { useState, useContext, useRef } from "react";
 import axios from "axios";
+import { __ } from "@wordpress/i18n";
 import SessionContext from "../contexts/SessionContext";
 
 const FileUploader = ({ supportCaseId, onUploadSuccess }) => {
@@ -72,7 +73,9 @@ const FileUploader = ({ supportCaseId, onUploadSuccess }) => {
 				borderRadius: "6px"
 			}}
 		>
-			<p style={{ marginBottom: "8px" }}>Drag and drop a file here, or click the plus icon to upload.</p>
+			<p style={{ marginBottom: "8px" }}>
+				{__("Drag and drop a file here, or click the plus icon to upload.", "hr-support-chat")}
+			</p>
 			<button onClick={handleClick} style={{ fontSize: "24px", cursor: "pointer" }}>
 				+
 			</button>

@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect, useRef } from "react";
 import SessionContext from "../contexts/SessionContext";
 import { apiFetch } from "../api/apiClient";
 import styles from "../styles/MessageInput.module.css";
+import { __ } from "@wordpress/i18n";
 
 const MessageInput = ({ caseId, refreshMessages, refreshCases }) => {
 	const [message, setMessage] = useState("");
@@ -41,7 +42,7 @@ const MessageInput = ({ caseId, refreshMessages, refreshCases }) => {
 			textareaRef.current?.focus();
 			handleResize();
 		} catch (err) {
-			alert("Failed to send message: " + err.message);
+			alert(__("Failed to send message: ", "hr-support-chat") + err.message);
 		} finally {
 			setSending(false);
 		}
@@ -67,14 +68,14 @@ const MessageInput = ({ caseId, refreshMessages, refreshCases }) => {
 					value={message}
 					onChange={handleChange}
 					onKeyDown={handleKeyDown}
-					placeholder="Type your message..."
+					placeholder={__("Type your message...", "hr-support-chat")}
 					className={styles.textarea}
 					rows={1}
 				/>
 				<button
 					type="submit"
 					disabled={sending || !message.trim()}
-					aria-label="Send message"
+					aria-label={__("Send message", "hr-support-chat")}
 					className={styles.sendButton}
 				>
 					<svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -3,6 +3,7 @@ import SessionContext from "../contexts/SessionContext";
 import { generateToken, copyToClipboard } from "../utils/TokenUtils";
 import { apiFetch } from "../api/apiClient";
 import styles from "../styles/SessionGate.module.css";
+import { __ } from "@wordpress/i18n";
 
 const SessionGate = ({ children }) => {
 	const { session, updateSession, ready } = useContext(SessionContext);
@@ -57,7 +58,7 @@ const SessionGate = ({ children }) => {
 				}
 			}
 		} catch (err) {
-			alert("Failed to create or authenticate session: " + err.message);
+			alert(__("Failed to create or authenticate session: ", "hr-support-chat") + err.message);
 		}
 	};
 
@@ -68,33 +69,34 @@ const SessionGate = ({ children }) => {
 		<div className={styles.container}>
 			{view === "mode" ? (
 				<div className={styles.card}>
-					<h2 className={styles.title}>How would you like to start?</h2>
+					<h2 className={styles.title}>{__("How would you like to start?", "hr-support-chat")}</h2>
 					<div className={styles.buttonGroup}>
 						<button onClick={() => setView("enter")} className={styles.primaryButton}>
-							🔐 Enter Existing Conversation
+							{__("Existing Conversation", "hr-support-chat")}
 						</button>
 						<button onClick={() => setView("create")} className={styles.secondaryButton}>
-							✨ Create New Conversation
+							{__("Create New Conversation", "hr-support-chat")}
 						</button>
 					</div>
 				</div>
 			) : (
 				<form onSubmit={handleSubmit} className={styles.formCard}>
-					<h2 className={styles.title}>Enter Your Chat Session</h2>
+					<h2 className={styles.title}>{__("Enter Your Chat Session", "hr-support-chat")}</h2>
 
 					<div className={styles.radioGroup}>
 						<label>
-							<input type="radio" name="authMode" checked={anonymous} onChange={() => setAnonymous(true)} /> Anonymous
+							<input type="radio" name="authMode" checked={anonymous} onChange={() => setAnonymous(true)} />{" "}
+							{__("Anonymous", "hr-support-chat")}
 						</label>
 						<label>
 							<input type="radio" name="authMode" checked={!anonymous} onChange={() => setAnonymous(false)} />{" "}
-							Identified
+							{__("Identified", "hr-support-chat")}
 						</label>
 					</div>
 
 					{view === "enter" && anonymous && (
 						<div>
-							<label>Access Token</label>
+							<label>{__("Access Token", "hr-support-chat")}</label>
 							<input type="text" name="token" value={form.token} onChange={handleChange} className={styles.input} />
 						</div>
 					)}
@@ -102,11 +104,11 @@ const SessionGate = ({ children }) => {
 					{view === "enter" && !anonymous && (
 						<>
 							<div>
-								<label>Email</label>
+								<label>{__("Email", "hr-support-chat")}</label>
 								<input type="email" name="email" value={form.email} onChange={handleChange} className={styles.input} />
 							</div>
 							<div>
-								<label>First Name</label>
+								<label>{__("First Name", "hr-support-chat")}</label>
 								<input
 									type="text"
 									name="firstName"
@@ -120,25 +122,27 @@ const SessionGate = ({ children }) => {
 
 					{view === "create" && anonymous && (
 						<div>
-							<label>Your Access Token</label>
+							<label>{__("Your Access Token", "hr-support-chat")}</label>
 							<div className={styles.tokenRow}>
 								<input type="text" value={generatedToken} readOnly className={styles.tokenField} />
 								<button type="button" onClick={() => copyToClipboard(generatedToken)} className={styles.copyButton}>
-									Copy
+									{__("Copy", "hr-support-chat")}
 								</button>
 							</div>
-							<p className={styles.note}>Save this token to access the conversation again.</p>
+							<p className={styles.note}>
+								{__("Save this token to access the conversation again.", "hr-support-chat")}
+							</p>
 						</div>
 					)}
 
 					{view === "create" && !anonymous && (
 						<>
 							<div>
-								<label>Email</label>
+								<label>{__("Email", "hr-support-chat")}</label>
 								<input type="email" name="email" value={form.email} onChange={handleChange} className={styles.input} />
 							</div>
 							<div>
-								<label>First Name</label>
+								<label>{__("First Name", "hr-support-chat")}</label>
 								<input
 									type="text"
 									name="firstName"
@@ -151,12 +155,12 @@ const SessionGate = ({ children }) => {
 					)}
 
 					<button type="submit" className={styles.primaryButton}>
-						{view === "enter" ? "Continue" : "Start Conversation"}
+						{view === "enter" ? __("Continue", "hr-support-chat") : __("Start Conversation", "hr-support-chat")}
 					</button>
 
 					<div className={styles.backLink}>
 						<button type="button" onClick={() => setView("mode")}>
-							← Back
+							← {__("Back", "hr-support-chat")}
 						</button>
 					</div>
 				</form>

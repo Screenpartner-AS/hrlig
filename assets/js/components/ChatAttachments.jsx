@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import styles from "../styles/ChatAttachments.module.css";
+import { __ } from "@wordpress/i18n";
 
 const ChatAttachments = ({ supportCaseId, attachments, setAttachments }) => {
 	useEffect(() => {
@@ -24,7 +25,7 @@ const ChatAttachments = ({ supportCaseId, attachments, setAttachments }) => {
 
 	return (
 		<div>
-			<h4>Case Files</h4>
+			<h4>{__("Case Files", "hr-support-chat")}</h4>
 			<div className={styles.attachment_list}>
 				{attachments.map((file) => (
 					<a

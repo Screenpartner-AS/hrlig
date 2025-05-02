@@ -55,6 +55,9 @@ add_action('wp_enqueue_scripts', function () {
             'restUrl' => esc_url_raw(rest_url('hrsc/v1')),
             'nonce' => wp_create_nonce('wp_rest')
         ]);
+
+        // Add this:
+        wp_set_script_translations('hrsc-chat-app', 'hr-support-chat', plugin_dir_path(__FILE__) . 'languages');
     }
 });
 

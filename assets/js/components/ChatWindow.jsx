@@ -3,6 +3,7 @@ import MessageInput from "./MessageInput";
 import SessionContext from "../contexts/SessionContext";
 import styles from "../styles/ChatWindow.module.css";
 import axios from "axios";
+import { __ } from "@wordpress/i18n";
 
 const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, setAttachments, refreshCases }) => {
 	const { session } = useContext(SessionContext);
@@ -63,9 +64,9 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 	useEffect(() => {
 		const handleVisibilityChange = () => {
 			if (document.visibilityState === "hidden") {
-				setStatusMessage("Chat paused (tab inactive)");
+				setStatusMessage(__("Chat paused (tab inactive)", "hr-support-chat"));
 			} else if (!navigator.onLine) {
-				setStatusMessage("You are offline");
+				setStatusMessage(__("You are offline", "hr-support-chat"));
 			} else {
 				setStatusMessage(null);
 			}
@@ -77,7 +78,7 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 		};
 		document.addEventListener("visibilitychange", handleVisibilityChange);
 		window.addEventListener("online", handleOnline);
-		window.addEventListener("offline", () => setStatusMessage("You are offline"));
+		window.addEventListener("offline", () => setStatusMessage(__("You are offline", "hr-support-chat")));
 		handleVisibilityChange();
 		return () => {
 			document.removeEventListener("visibilitychange", handleVisibilityChange);
@@ -149,23 +150,23 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 	}, []);
 
 	if (!caseId) {
-		return <div className={styles.placeholder}>Select a case to view messages</div>;
+		return <div className={styles.placeholder}>{__("Select a case to view messages", "hr-support-chat")}</div>;
 	}
 
 	return (
 		<div className={styles.chatContainer} ref={dropZoneRef} onDragOver={handleDragOver} onDrop={handleDrop}>
 			{dragActive && (
 				<div className={styles.dragOverlay}>
-					<div className={styles.dragMessage}>Drop files to upload</div>
+					<div className={styles.dragMessage}>{__("Drop files to upload", "hr-support-chat")}</div>
 				</div>
 			)}
 
 			<div className={styles.messagesArea}>
 				<div className={styles.messagesWrapper}>
 					{!firstLoadDone ? (
-						<p className={styles.loadingText}>Loading conversation…</p>
+						<p className={styles.loadingText}>{__("Loading conversation…", "hr-support-chat")}</p>
 					) : messages.length === 0 ? (
-						<p className={styles.emptyText}>No messages yet. Start the conversation!</p>
+						<p className={styles.emptyText}>{__("No messages yet. Start the conversation!", "hr-support-chat")}</p>
 					) : null}
 					{statusMessage && <div className={styles.statusMessage}>{statusMessage}</div>}
 					{messages.map((msg, idx) => {
@@ -204,7 +205,7 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 					<button
 						className={styles.uploadButton}
 						onClick={() => fileInputRef.current?.click()}
-						aria-label="Upload file"
+						aria-label={__("Upload file", "hr-support-chat")}
 					>
 						+
 					</button>

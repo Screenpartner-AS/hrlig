@@ -1,6 +1,6 @@
 import React, { useContext, useState, useMemo } from "react";
-import SessionContext from "../contexts/SessionContext";
 import styles from "../styles/Sidebar.module.css";
+import { __ } from "@wordpress/i18n";
 
 const Sidebar = ({ selectedCaseId, onSelectCase, cases, refreshCases, loading, error }) => {
 	const [filter, setFilter] = useState("All");
@@ -12,7 +12,7 @@ const Sidebar = ({ selectedCaseId, onSelectCase, cases, refreshCases, loading, e
 
 	return (
 		<aside className={styles.sidebar}>
-			<h2 className={styles.heading}>Support Cases</h2>
+			<h2 className={styles.heading}>{__("Support Cases", "hr-support-chat")}</h2>
 
 			<div className={styles.filterWrapper}>
 				<select
@@ -21,16 +21,16 @@ const Sidebar = ({ selectedCaseId, onSelectCase, cases, refreshCases, loading, e
 					onChange={(e) => setFilter(e.target.value)}
 					className={styles.filterSelect}
 				>
-					<option value="All">All</option>
-					<option value="Open">Open</option>
-					<option value="Ongoing">Ongoing</option>
-					<option value="Closed">Closed</option>
+					<option value="All">{__("All", "hr-support-chat")}</option>
+					<option value="New">{__("New", "hr-support-chat")}</option>
+					<option value="Ongoing">{__("Ongoing", "hr-support-chat")}</option>
+					<option value="Closed">{__("Closed", "hr-support-chat")}</option>
 				</select>
 			</div>
 
 			{error && <p className={styles.error}>{error}</p>}
 			{!cases.length && loading ? (
-				<p className={styles.loading}>Loading…</p>
+				<p className={styles.loading}>{__("Loading…", "hr-support-chat")}</p>
 			) : (
 				<ul className={styles.caseList}>
 					{filteredCases.map((c) => (

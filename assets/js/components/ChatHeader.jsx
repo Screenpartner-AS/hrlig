@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styles from "../styles/ChatHeader.module.css";
+import { __ } from "@wordpress/i18n";
 
 const ChatHeader = ({
 	supportCase,
@@ -25,7 +26,7 @@ const ChatHeader = ({
 		setEditing(true);
 	};
 
-	const currentTitle = supportCase?.title?.rendered || "Untitled Case";
+	const currentTitle = supportCase?.title?.rendered || __("Untitled Case", "hr-support-chat");
 
 	const handleTitleSave = () => {
 		if (tempTitle.trim() && tempTitle !== supportCase?.title?.rendered) {
@@ -57,7 +58,11 @@ const ChatHeader = ({
 					<div className={styles.titleDisplay}>
 						<span className={styles.titleText}>{currentTitle}</span>
 						{canEditTitle && (
-							<button className={styles.editButton} onClick={handleStartEditing} title="Edit title">
+							<button
+								className={styles.editButton}
+								onClick={handleStartEditing}
+								title={__("Edit title", "hr-support-chat")}
+							>
 								✏️
 							</button>
 						)}
@@ -66,7 +71,7 @@ const ChatHeader = ({
 			</div>
 
 			<div className={styles.actions}>
-				<button onClick={onToggleInfo} title="Toggle Info" className={styles.iconButton}>
+				<button onClick={onToggleInfo} title={__("Toggle Info", "hr-support-chat")} className={styles.iconButton}>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						viewBox="-0.625 -0.625 20 20"
@@ -89,7 +94,7 @@ const ChatHeader = ({
 				</button>
 				<button
 					onClick={onToggleAttachments}
-					title="Toggle Attachments"
+					title={__("Toggle Attachments", "hr-support-chat")}
 					className={`${styles.iconButton} ${showAttachments ? styles.active : ""}`}
 				>
 					<svg
