@@ -4,10 +4,8 @@ import SessionContext from "../contexts/SessionContext";
 import styles from "../styles/Sidebar.module.css";
 
 const Sidebar = ({ selectedCaseId, onSelectCase, cases, refreshCases, loading, error }) => {
-	const { session } = useContext(SessionContext);
-
+	const { session, ready } = useContext(SessionContext);
 	const [filter, setFilter] = useState("All");
-
 	const filteredCases = cases.filter((c) => (filter === "All" ? true : c.status === filter));
 
 	const renderStatusDot = (status) => {

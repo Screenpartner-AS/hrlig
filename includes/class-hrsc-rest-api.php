@@ -325,14 +325,14 @@ class HRSC_REST_API
             'post_status' => 'publish',
             'post_title' => $anonymous ? __('Anonymous Support Case', 'hr-support-chat') : sprintf(__('Support Case – %s', 'hr-support-chat'), $first_name),
             'post_content' => '',
-            'comment_status' => 'open',
+            'comment_status' => 'new',
         ]);
 
         if (is_wp_error($post_id)) {
             return new WP_Error('create_failed', __('Failed to create support case.', 'hr-support-chat'), ['status' => 500]);
         }
 
-        update_post_meta($post_id, '_hrsc_status', 'Open');
+        update_post_meta($post_id, '_hrsc_status', 'New');
         update_post_meta($post_id, '_hrsc_token', $anonymous ? $token : '');
         update_post_meta($post_id, '_hrsc_employee_email', $email);
         update_post_meta($post_id, '_hrsc_employee_first_name', $first_name);

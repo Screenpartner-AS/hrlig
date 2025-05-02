@@ -1058,7 +1058,8 @@ const Sidebar = ({
   error
 }) => {
   const {
-    session
+    session,
+    ready
   } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(_contexts_SessionContext__WEBPACK_IMPORTED_MODULE_2__["default"]);
   const [filter, setFilter] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("All");
   const filteredCases = cases.filter(c => filter === "All" ? true : c.status === filter);
@@ -1208,31 +1209,27 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../contexts/SessionContext */ "./assets/js/contexts/SessionContext.jsx");
+
 
 const useAuthSession = () => {
-  const [session, setSession] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    const fetchSession = async () => {
-      try {
-        const res = await fetch("/wp-json/hrsc/v1/session", {
-          headers: {
-            "X-WP-Nonce": window.hrscChatVars?.nonce || ""
-          }
-        });
-        const data = await res.json();
-        setSession({
-          ...data,
-          isHR: data.roles?.includes("hr_advisor") || false,
-          isAdmin: data.roles?.includes("administrator") || false
-        });
-      } catch (err) {
-        console.error("Failed to fetch session:", err);
-      }
-    };
-    fetchSession();
-  }, []);
+  const {
+    session,
+    updateSession,
+    ready
+  } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(_contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__["default"]);
+  const isAuthenticated = !!(session?.token || session?.email && session?.firstName);
+  const isHR = session?.roles?.includes("hr_advisor") || false;
+  const isAdmin = session?.roles?.includes("administrator") || false;
   return {
-    session
+    session: {
+      ...session,
+      isHR,
+      isAdmin
+    },
+    updateSession,
+    ready,
+    isAuthenticated
   };
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (useAuthSession);
@@ -1302,31 +1299,43 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _api_apiClient__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../api/apiClient */ "./assets/js/api/apiClient.js");
 
 
-const useSupportCases = session => {
+const useSupportCases = (session, ready) => {
   const [cases, setCases] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
-  const [loading, setLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
+  const [loading, setLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [error, setError] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const fetchCases = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(async () => {
     if (!session) return;
+    const isLoggedIn = session.isAdmin || session.isHR;
+    const isAnonymous = !!session.token || !!session.email && !!session.firstName;
+    if (!isLoggedIn && !isAnonymous) {
+      console.warn("⛔ Skipping fetch: anonymous user has no valid session");
+      setError("Anonymous session missing token or identity.");
+      return;
+    }
     setLoading(true);
     try {
-      const data = await (0,_api_apiClient__WEBPACK_IMPORTED_MODULE_1__.apiFetch)("/support-cases", "GET", null, {
-        token: session.token,
-        email: session.email,
-        first_name: session.firstName
-      });
+      const queryParams = {};
+      if (!isLoggedIn) {
+        if (session.token) queryParams.token = session.token;
+        if (session.email) queryParams.email = session.email;
+        if (session.firstName) queryParams.first_name = session.firstName;
+      }
+      console.log("🔍 Fetching cases with params:", queryParams);
+      const data = await (0,_api_apiClient__WEBPACK_IMPORTED_MODULE_1__.apiFetch)("/support-cases", "GET", null, queryParams);
       setCases(data);
       setError(null);
     } catch (err) {
-      console.error("Failed to load support cases:", err);
+      console.error("❌ Failed to load support cases:", err);
       setError("Failed to load cases");
     } finally {
       setLoading(false);
     }
   }, [session]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    fetchCases();
-  }, [fetchCases]);
+    if (ready) {
+      fetchCases();
+    }
+  }, [ready, fetchCases]);
   return {
     cases,
     loading,

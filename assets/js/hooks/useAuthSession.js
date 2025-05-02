@@ -1,32 +1,24 @@
-import { useState, useEffect } from "react";
+import { useContext } from "react";
+import SessionContext from "../contexts/SessionContext";
 
 const useAuthSession = () => {
-	const [session, setSession] = useState(null);
+	const { session, updateSession, ready } = useContext(SessionContext);
 
-	useEffect(() => {
-		const fetchSession = async () => {
-			try {
-				const res = await fetch("/wp-json/hrsc/v1/session", {
-					headers: {
-						"X-WP-Nonce": window.hrscChatVars?.nonce || ""
-					}
-				});
-				const data = await res.json();
+	const isAuthenticated = !!(session?.token || (session?.email && session?.firstName));
 
-				setSession({
-					...data,
-					isHR: data.roles?.includes("hr_advisor") || false,
-					isAdmin: data.roles?.includes("administrator") || false
-				});
-			} catch (err) {
-				console.error("Failed to fetch session:", err);
-			}
-		};
+	const isHR = session?.roles?.includes("hr_advisor") || false;
+	const isAdmin = session?.roles?.includes("administrator") || false;
 
-		fetchSession();
-	}, []);
-
-	return { session };
+	return {
+		session: {
+			...session,
+			isHR,
+			isAdmin
+		},
+		updateSession,
+		ready,
+		isAuthenticated
+	};
 };
 
 export default useAuthSession;
