@@ -259,6 +259,12 @@ class HRSC_REST_API
             'comment_approved' => 1,
         ]);
 
+        // 👥 Auto-assign and update status if HR/Admin
+        if (is_user_logged_in() && current_user_can('edit_support_cases')) {
+            update_post_meta($post_id, '_hrsc_status', 'Ongoing');
+            update_post_meta($post_id, '_hrsc_assigned_hr', get_current_user_id());
+        }
+
         return ['success' => true];
     }
 

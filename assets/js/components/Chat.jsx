@@ -26,7 +26,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	const dropRef = useRef(null);
 
 	const { session } = useAuthSession();
-	const { cases } = useSupportCases(session);
+	const { cases, refreshCases } = useSupportCases(session);
 	const { messages, refreshMessages, loading } = useMessages(caseId);
 
 	useEffect(() => {
@@ -111,6 +111,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 
 		setUploading(false);
 		await refreshMessages(caseId, session);
+		await refreshCases(); // 👈 refresh the sidebar cases
 	};
 
 	if (!session) return null;
@@ -159,6 +160,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 					loading={loading}
 					attachments={attachments}
 					setAttachments={setAttachments}
+					refreshCases={refreshCases}
 				/>
 			</div>
 		</div>

@@ -4,7 +4,7 @@ import SessionContext from "../contexts/SessionContext";
 import styles from "../styles/ChatWindow.module.css";
 import axios from "axios";
 
-const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, setAttachments }) => {
+const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, setAttachments, refreshCases }) => {
 	const { session } = useContext(SessionContext);
 	const messagesEndRef = useRef(null);
 	const fileInputRef = useRef(null);
@@ -16,6 +16,7 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 
 	const refreshAndMarkReady = async () => {
 		await refreshMessages(caseId, session);
+		await refreshCases(); // ✅ also refresh sidebar items
 		if (!firstLoadDone) setFirstLoadDone(true);
 	};
 
@@ -208,7 +209,7 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 					>
 						+
 					</button>
-					<MessageInput caseId={caseId} refreshMessages={refreshMessages} />
+					<MessageInput caseId={caseId} refreshMessages={refreshMessages} refreshCases={refreshCases} />
 				</div>
 			</div>
 		</div>

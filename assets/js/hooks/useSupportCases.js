@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "../api/apiClient";
 
 const useSupportCases = (session) => {
@@ -6,37 +6,36 @@ const useSupportCases = (session) => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 
-	useEffect(() => {
-		const fetchCases = async () => {
-			if (!session) return;
+	const fetchCases = useCallback(async () => {
+		if (!session) return;
 
-			setLoading(true);
-			try {
-				// For HR advisors, fetch all — no query needed
-				let query = {};
-				if (!session.isHR) {
-					// For employees, use token/email combo
-					query = {
-						token: session.token,
-						email: session.email,
-						first_name: session.firstName
-					};
-				}
-
-				const data = await apiFetch("/support-cases", "GET", null, query);
-				setCases(data);
-			} catch (err) {
-				console.error("Failed to load support cases:", err);
-				setError("Failed to load cases");
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		fetchCases();
+		setLoading(true);
+		try {
+			const data = await apiFetch("/support-cases", "GET", null, {
+				token: session.token,
+				email: session.email,
+				first_name: session.firstName
+			});
+			setCases(data);
+			setError(null);
+		} catch (err) {
+			console.error("Failed to load support cases:", err);
+			setError("Failed to load cases");
+		} finally {
+			setLoading(false);
+		}
 	}, [session]);
 
-	return { cases, loading, error };
+	useEffect(() => {
+		fetchCases();
+	}, [fetchCases]);
+
+	return {
+		cases,
+		loading,
+		error,
+		refreshCases: fetchCases
+	};
 };
 
 export default useSupportCases;

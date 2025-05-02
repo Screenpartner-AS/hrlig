@@ -142,7 +142,8 @@ const Chat = ({
     session
   } = (0,_hooks_useAuthSession__WEBPACK_IMPORTED_MODULE_8__["default"])();
   const {
-    cases
+    cases,
+    refreshCases
   } = (0,_hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_7__["default"])(session);
   const {
     messages,
@@ -220,6 +221,7 @@ const Chat = ({
     }
     setUploading(false);
     await refreshMessages(caseId, session);
+    await refreshCases(); // 👈 refresh the sidebar cases
   };
   if (!session) return null;
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
@@ -261,7 +263,8 @@ const Chat = ({
     refreshMessages: refreshMessages,
     loading: loading,
     attachments: attachments,
-    setAttachments: setAttachments
+    setAttachments: setAttachments,
+    refreshCases: refreshCases
   })));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Chat);
@@ -462,7 +465,8 @@ const ChatWindow = ({
   refreshMessages,
   loading,
   attachments,
-  setAttachments
+  setAttachments,
+  refreshCases
 }) => {
   const {
     session
@@ -475,6 +479,7 @@ const ChatWindow = ({
   const [dragActive, setDragActive] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const refreshAndMarkReady = async () => {
     await refreshMessages(caseId, session);
+    await refreshCases(); // ✅ also refresh sidebar items
     if (!firstLoadDone) setFirstLoadDone(true);
   };
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
@@ -651,7 +656,8 @@ const ChatWindow = ({
     "aria-label": "Upload file"
   }, "+"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_MessageInput__WEBPACK_IMPORTED_MODULE_1__["default"], {
     caseId: caseId,
-    refreshMessages: refreshMessages
+    refreshMessages: refreshMessages,
+    refreshCases: refreshCases
   }))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ChatWindow);
@@ -680,7 +686,8 @@ __webpack_require__.r(__webpack_exports__);
 
 const MessageInput = ({
   caseId,
-  refreshMessages
+  refreshMessages,
+  refreshCases
 }) => {
   const [message, setMessage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("");
   const [sending, setSending] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
@@ -712,6 +719,7 @@ const MessageInput = ({
       });
       setMessage("");
       await refreshMessages(caseId, session);
+      await refreshCases();
       textareaRef.current?.focus();
       handleResize();
     } catch (err) {
@@ -982,17 +990,44 @@ const Sidebar = ({
     loading,
     error
   } = (0,_hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_1__["default"])(session);
+  const [filter, setFilter] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("All");
+  const filteredCases = cases.filter(c => filter === "All" ? true : c.status === filter);
+  const renderStatusDot = status => {
+    const statusClass = {
+      Open: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusOpen,
+      Ongoing: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusOngoing,
+      Closed: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusClosed
+    }[status] || _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusUnknown;
+    return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+      className: `${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusDot} ${statusClass}`
+    });
+  };
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("aside", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].sidebar
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].heading
-  }, "Support Cases"), loading && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+  }, "Support Cases"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].filterWrapper
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("select", {
+    id: "statusFilter",
+    value: filter,
+    onChange: e => setFilter(e.target.value),
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].filterSelect
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    value: "All"
+  }, "All"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    value: "Open"
+  }, "Open"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    value: "Ongoing"
+  }, "Ongoing"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    value: "Closed"
+  }, "Closed"))), loading && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].loading
   }, "Loading\u2026"), error && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].error
   }, error), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].caseList
-  }, cases.map(c => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
+  }, filteredCases.map(c => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
     key: c.id,
     onClick: () => onSelectCase(c.id),
     className: `${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].caseItem} ${c.id === selectedCaseId ? _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].active : ""}`
@@ -1000,7 +1035,7 @@ const Sidebar = ({
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].caseTitle
   }, c.title), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].caseStatus
-  }, c.status)))));
+  }, renderStatusDot(c.status), c.status)))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Sidebar);
 
@@ -1191,36 +1226,32 @@ const useSupportCases = session => {
   const [cases, setCases] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   const [loading, setLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
   const [error, setError] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    const fetchCases = async () => {
-      if (!session) return;
-      setLoading(true);
-      try {
-        // For HR advisors, fetch all — no query needed
-        let query = {};
-        if (!session.isHR) {
-          // For employees, use token/email combo
-          query = {
-            token: session.token,
-            email: session.email,
-            first_name: session.firstName
-          };
-        }
-        const data = await (0,_api_apiClient__WEBPACK_IMPORTED_MODULE_1__.apiFetch)("/support-cases", "GET", null, query);
-        setCases(data);
-      } catch (err) {
-        console.error("Failed to load support cases:", err);
-        setError("Failed to load cases");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCases();
+  const fetchCases = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(async () => {
+    if (!session) return;
+    setLoading(true);
+    try {
+      const data = await (0,_api_apiClient__WEBPACK_IMPORTED_MODULE_1__.apiFetch)("/support-cases", "GET", null, {
+        token: session.token,
+        email: session.email,
+        first_name: session.firstName
+      });
+      setCases(data);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to load support cases:", err);
+      setError("Failed to load cases");
+    } finally {
+      setLoading(false);
+    }
   }, [session]);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    fetchCases();
+  }, [fetchCases]);
   return {
     cases,
     loading,
-    error
+    error,
+    refreshCases: fetchCases
   };
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (useSupportCases);
@@ -1328,7 +1359,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 // extracted by mini-css-extract-plugin
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"sidebar":"Sidebar-module__sidebar__eyeRU","heading":"Sidebar-module__heading__JmCn3","loading":"Sidebar-module__loading__n_qzF","error":"Sidebar-module__error__Al9Ym","caseList":"Sidebar-module__caseList__bO43P","caseItem":"Sidebar-module__caseItem__VmHJT","active":"Sidebar-module__active__fs957","caseTitle":"Sidebar-module__caseTitle__dvjmp","caseStatus":"Sidebar-module__caseStatus__CF0ig"});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"sidebar":"Sidebar-module__sidebar__eyeRU","heading":"Sidebar-module__heading__JmCn3","loading":"Sidebar-module__loading__n_qzF","error":"Sidebar-module__error__Al9Ym","caseList":"Sidebar-module__caseList__bO43P","caseItem":"Sidebar-module__caseItem__VmHJT","active":"Sidebar-module__active__fs957","caseTitle":"Sidebar-module__caseTitle__dvjmp","caseStatus":"Sidebar-module__caseStatus__CF0ig","filterSelect":"Sidebar-module__filterSelect__Qp1_p","statusDot":"Sidebar-module__statusDot__em3RT","statusOpen":"Sidebar-module__statusOpen__QqM8G","statusOngoing":"Sidebar-module__statusOngoing__nxfLi","statusClosed":"Sidebar-module__statusClosed__NpbEM"});
 
 /***/ }),
 

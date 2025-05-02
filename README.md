@@ -13,7 +13,7 @@ Built with React, Tailwind CSS, and the WordPress REST API, this plugin enables 
 - **Live chat UI** inspired by ChatGPT
 - **Persistent chat sessions** via local storage
 - **WP admin case management** for HR advisors
-- **Status tracking**: Open, Ongoing, Resolved, Closed
+- **Status tracking**: Open, Ongoing, Closed
 - **Role-based access** (`hr_advisor`)
 - **Custom post type + comments** as messages
 - **React + Tailwind frontend** with `wp-scripts` build system

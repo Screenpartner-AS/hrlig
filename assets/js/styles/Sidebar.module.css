@@ -55,3 +55,32 @@
 	font-size: 0.75rem;
 	color: #6b7280;
 }
+
+.filterSelect {
+	width: 100%;
+	padding: 0.5rem;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	background-color: #ffffff;
+	font-size: 0.875rem;
+}
+
+.statusDot {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	margin-right: 6px;
+}
+
+.statusOpen {
+	background-color: #10b981; /* green */
+}
+
+.statusOngoing {
+	background-color: #f97316; /* orange */
+}
+
+.statusClosed {
+	background-color: #6b7280; /* gray */
+}

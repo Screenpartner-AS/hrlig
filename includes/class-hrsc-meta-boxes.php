@@ -41,7 +41,7 @@ class HRSC_Meta_Boxes
         ?>
         <p><strong><?php _e('Status', 'hr-support-chat'); ?></strong></p>
         <select name="hrsc_status">
-            <?php foreach (['Open', 'Ongoing', 'Resolved', 'Closed'] as $option): ?>
+            <?php foreach (['Open', 'Ongoing', 'Closed'] as $option): ?>
                 <option value="<?php echo esc_attr($option); ?>" <?php selected($status, $option); ?>>
                     <?php echo esc_html($option); ?>
                 </option>

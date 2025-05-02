@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import useSupportCases from "../hooks/useSupportCases";
 import SessionContext from "../contexts/SessionContext";
 import styles from "../styles/Sidebar.module.css";
@@ -7,22 +7,54 @@ const Sidebar = ({ selectedCaseId, onSelectCase }) => {
 	const { session } = useContext(SessionContext);
 	const { cases, loading, error } = useSupportCases(session);
 
+	const [filter, setFilter] = useState("All");
+
+	const filteredCases = cases.filter((c) => (filter === "All" ? true : c.status === filter));
+
+	const renderStatusDot = (status) => {
+		const statusClass =
+			{
+				Open: styles.statusOpen,
+				Ongoing: styles.statusOngoing,
+				Closed: styles.statusClosed
+			}[status] || styles.statusUnknown;
+
+		return <span className={`${styles.statusDot} ${statusClass}`} />;
+	};
+
 	return (
 		<aside className={styles.sidebar}>
 			<h2 className={styles.heading}>Support Cases</h2>
+
+			<div className={styles.filterWrapper}>
+				<select
+					id="statusFilter"
+					value={filter}
+					onChange={(e) => setFilter(e.target.value)}
+					className={styles.filterSelect}
+				>
+					<option value="All">All</option>
+					<option value="Open">Open</option>
+					<option value="Ongoing">Ongoing</option>
+					<option value="Closed">Closed</option>
+				</select>
+			</div>
 
 			{loading && <p className={styles.loading}>Loading…</p>}
 			{error && <p className={styles.error}>{error}</p>}
 
 			<ul className={styles.caseList}>
-				{cases.map((c) => (
+				{filteredCases.map((c) => (
 					<li
 						key={c.id}
 						onClick={() => onSelectCase(c.id)}
 						className={`${styles.caseItem} ${c.id === selectedCaseId ? styles.active : ""}`}
 					>
 						<div className={styles.caseTitle}>{c.title}</div>
-						<div className={styles.caseStatus}>{c.status}</div>
+						<div className={styles.caseStatus}>
+							{renderStatusDot(c.status)}
+							{c.status}
+						</div>
 					</li>
 				))}
 			</ul>

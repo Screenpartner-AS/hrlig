@@ -59,6 +59,35 @@
 	color: #6b7280;
 }
 
+.Sidebar-module__filterSelect__Qp1_p {
+	width: 100%;
+	padding: 0.5rem;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	background-color: #ffffff;
+	font-size: 0.875rem;
+}
+
+.Sidebar-module__statusDot__em3RT {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	margin-right: 6px;
+}
+
+.Sidebar-module__statusOpen__QqM8G {
+	background-color: #10b981; /* green */
+}
+
+.Sidebar-module__statusOngoing__nxfLi {
+	background-color: #f97316; /* orange */
+}
+
+.Sidebar-module__statusClosed__NpbEM {
+	background-color: #6b7280; /* gray */
+}
+
 /*!**********************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./assets/js/styles/MessageInput.module.css ***!
   \**********************************************************************************************************************************************************************************************/

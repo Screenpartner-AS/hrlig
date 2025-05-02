@@ -3,7 +3,7 @@ import SessionContext from "../contexts/SessionContext";
 import { apiFetch } from "../api/apiClient";
 import styles from "../styles/MessageInput.module.css";
 
-const MessageInput = ({ caseId, refreshMessages }) => {
+const MessageInput = ({ caseId, refreshMessages, refreshCases }) => {
 	const [message, setMessage] = useState("");
 	const [sending, setSending] = useState(false);
 	const { session } = useContext(SessionContext);
@@ -37,6 +37,7 @@ const MessageInput = ({ caseId, refreshMessages }) => {
 
 			setMessage("");
 			await refreshMessages(caseId, session);
+			await refreshCases();
 			textareaRef.current?.focus();
 			handleResize();
 		} catch (err) {
