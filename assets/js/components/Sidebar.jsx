@@ -13,7 +13,7 @@ const Sidebar = ({ selectedCaseId, onSelectCase, cases, refreshCases, loading, e
 	const renderStatusDot = (status) => {
 		const statusClass =
 			{
-				Open: styles.statusOpen,
+				New: styles.statusNew,
 				Ongoing: styles.statusOngoing,
 				Closed: styles.statusClosed
 			}[status] || styles.statusUnknown;
@@ -33,7 +33,7 @@ const Sidebar = ({ selectedCaseId, onSelectCase, cases, refreshCases, loading, e
 					className={styles.filterSelect}
 				>
 					<option value="All">All</option>
-					<option value="Open">Open</option>
+					<option value="New">New</option>
 					<option value="Ongoing">Ongoing</option>
 					<option value="Closed">Closed</option>
 				</select>

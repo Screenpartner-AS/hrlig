@@ -151,6 +151,8 @@ const Chat = ({
     messages,
     refreshMessages
   } = (0,_hooks_useMessages__WEBPACK_IMPORTED_MODULE_6__["default"])(caseId);
+  const canEditTitle = session?.isHR || session?.isAdmin;
+  console.log(canEditTitle);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const paramId = getQueryParam("case_id");
     if (paramId && /^\d+$/.test(paramId)) {
@@ -242,6 +244,7 @@ const Chat = ({
     onDragLeave: handleDragLeave,
     onDrop: handleDrop
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatHeader__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    key: caseId,
     onToggleInfo: () => {
       setShowInfo(prev => !prev);
       setShowAttachments(false);
@@ -251,7 +254,23 @@ const Chat = ({
       setShowInfo(false);
     },
     showAttachments: showAttachments,
-    uploading: uploading
+    uploading: uploading,
+    supportCase: supportCase,
+    canEditTitle: canEditTitle,
+    onTitleUpdate: async newTitle => {
+      try {
+        await axios__WEBPACK_IMPORTED_MODULE_10__["default"].post(`/wp-json/hrsc/v1/support-cases/${caseId}/title`, {
+          title: newTitle
+        }, {
+          headers: {
+            "X-WP-Nonce": window.hrscChatVars?.nonce || ""
+          }
+        });
+        await refreshCases();
+      } catch (err) {
+        console.error("❌ Title update failed:", err);
+      }
+    }
   }), showAttachments && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdown
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatAttachments__WEBPACK_IMPORTED_MODULE_4__["default"], {
@@ -346,16 +365,55 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const ChatHeader = ({
+  supportCase,
+  canEditTitle,
+  onTitleUpdate,
   onToggleInfo,
   onToggleAttachments,
   showAttachments,
   uploading
 }) => {
+  const [editing, setEditing] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [tempTitle, setTempTitle] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("");
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    // Update local state when supportCase changes
+    if (supportCase?.title?.rendered) {
+      setTempTitle(supportCase.title.rendered);
+    }
+  }, [supportCase?.id, supportCase?.title?.rendered]);
+  const currentTitle = tempTitle || "Support Chat";
+  const handleTitleSave = () => {
+    if (tempTitle.trim() && tempTitle !== supportCase?.title?.rendered) {
+      onTitleUpdate?.(tempTitle);
+    }
+    setEditing(false);
+  };
+  const handleKeyDown = e => {
+    if (e.key === "Enter") {
+      handleTitleSave();
+    }
+  };
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].header
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].title
-  }, "Support Chat"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, editing ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "text",
+    value: tempTitle,
+    onChange: e => setTempTitle(e.target.value),
+    onBlur: handleTitleSave,
+    onKeyDown: handleKeyDown,
+    autoFocus: true,
+    className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].titleInput
+  }) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].titleDisplay
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+    className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].titleText
+  }, currentTitle), canEditTitle && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].editButton,
+    onClick: () => setEditing(true),
+    title: "Edit title"
+  }, "\u270F\uFE0F"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].actions
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
     onClick: onToggleInfo,
@@ -997,7 +1055,7 @@ const Sidebar = ({
   const filteredCases = cases.filter(c => filter === "All" ? true : c.status === filter);
   const renderStatusDot = status => {
     const statusClass = {
-      Open: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusOpen,
+      New: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusNew,
       Ongoing: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusOngoing,
       Closed: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusClosed
     }[status] || _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].statusUnknown;
@@ -1019,8 +1077,8 @@ const Sidebar = ({
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
     value: "All"
   }, "All"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
-    value: "Open"
-  }, "Open"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    value: "New"
+  }, "New"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
     value: "Ongoing"
   }, "Ongoing"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
     value: "Closed"
@@ -1141,21 +1199,31 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../contexts/SessionContext */ "./assets/js/contexts/SessionContext.jsx");
-
 
 const useAuthSession = () => {
-  const {
-    session,
-    updateSession,
-    ready
-  } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(_contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__["default"]);
-  const isAuthenticated = !!(session?.token || session?.email && session?.firstName);
+  const [session, setSession] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    const fetchSession = async () => {
+      try {
+        const res = await fetch("/wp-json/hrsc/v1/session", {
+          headers: {
+            "X-WP-Nonce": window.hrscChatVars?.nonce || ""
+          }
+        });
+        const data = await res.json();
+        setSession({
+          ...data,
+          isHR: data.roles?.includes("hr_advisor") || false,
+          isAdmin: data.roles?.includes("administrator") || false
+        });
+      } catch (err) {
+        console.error("Failed to fetch session:", err);
+      }
+    };
+    fetchSession();
+  }, []);
   return {
-    session,
-    updateSession,
-    ready,
-    isAuthenticated
+    session
   };
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (useAuthSession);
@@ -1302,7 +1370,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 // extracted by mini-css-extract-plugin
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"header":"ChatHeader-module__header__wGwua","title":"ChatHeader-module__title__gOMPk","actions":"ChatHeader-module__actions___SiF3","iconButton":"ChatHeader-module__iconButton__oqsIe","active":"ChatHeader-module__active__ZB1r_","badge":"ChatHeader-module__badge__t2lic","pulse":"ChatHeader-module__pulse__r_COJ"});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"header":"ChatHeader-module__header__wGwua","title":"ChatHeader-module__title__gOMPk","titleInput":"ChatHeader-module__titleInput__hqQzK","editButton":"ChatHeader-module__editButton__jfEWu","titleDisplay":"ChatHeader-module__titleDisplay__BtQ7R","titleText":"ChatHeader-module__titleText__MATJm","actions":"ChatHeader-module__actions___SiF3","iconButton":"ChatHeader-module__iconButton__oqsIe","active":"ChatHeader-module__active__ZB1r_","badge":"ChatHeader-module__badge__t2lic","pulse":"ChatHeader-module__pulse__r_COJ"});
 
 /***/ }),
 
@@ -1362,7 +1430,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 // extracted by mini-css-extract-plugin
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"sidebar":"Sidebar-module__sidebar__eyeRU","heading":"Sidebar-module__heading__JmCn3","loading":"Sidebar-module__loading__n_qzF","error":"Sidebar-module__error__Al9Ym","caseList":"Sidebar-module__caseList__bO43P","caseItem":"Sidebar-module__caseItem__VmHJT","active":"Sidebar-module__active__fs957","caseTitle":"Sidebar-module__caseTitle__dvjmp","caseStatus":"Sidebar-module__caseStatus__CF0ig","filterSelect":"Sidebar-module__filterSelect__Qp1_p","statusDot":"Sidebar-module__statusDot__em3RT","statusOpen":"Sidebar-module__statusOpen__QqM8G","statusOngoing":"Sidebar-module__statusOngoing__nxfLi","statusClosed":"Sidebar-module__statusClosed__NpbEM"});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"sidebar":"Sidebar-module__sidebar__eyeRU","heading":"Sidebar-module__heading__JmCn3","loading":"Sidebar-module__loading__n_qzF","error":"Sidebar-module__error__Al9Ym","caseList":"Sidebar-module__caseList__bO43P","caseItem":"Sidebar-module__caseItem__VmHJT","active":"Sidebar-module__active__fs957","caseTitle":"Sidebar-module__caseTitle__dvjmp","caseStatus":"Sidebar-module__caseStatus__CF0ig","filterSelect":"Sidebar-module__filterSelect__Qp1_p","statusDot":"Sidebar-module__statusDot__em3RT","statusNew":"Sidebar-module__statusNew___C2Eq","statusOngoing":"Sidebar-module__statusOngoing__nxfLi","statusClosed":"Sidebar-module__statusClosed__NpbEM"});
 
 /***/ }),
 

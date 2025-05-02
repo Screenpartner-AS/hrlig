@@ -66,6 +66,7 @@
 	border-radius: 6px;
 	background-color: #ffffff;
 	font-size: 0.875rem;
+	margin-bottom: 10px;
 }
 
 .Sidebar-module__statusDot__em3RT {
@@ -76,12 +77,12 @@
 	margin-left: 6px;
 }
 
-.Sidebar-module__statusOpen__QqM8G {
-	background-color: #10b981; /* green */
+.Sidebar-module__statusNew___C2Eq {
+	background-color: #4f54d6; /* green */
 }
 
 .Sidebar-module__statusOngoing__nxfLi {
-	background-color: #f97316; /* orange */
+	background-color: #10b981; /* orange */
 }
 
 .Sidebar-module__statusClosed__NpbEM {
@@ -321,6 +322,34 @@
 .ChatHeader-module__title__gOMPk {
 	font-weight: 600;
 	font-size: 1.1rem;
+}
+
+.ChatHeader-module__titleInput__hqQzK {
+	font-size: 1rem;
+	padding: 0.25rem 0.5rem;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	width: 100%;
+}
+
+.ChatHeader-module__editButton__jfEWu {
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 0.85rem;
+	margin-right: 0.5rem;
+	color: #666;
+}
+
+.ChatHeader-module__titleDisplay__BtQ7R {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.ChatHeader-module__titleText__MATJm {
+	font-size: 1rem;
+	font-weight: 600;
 }
 
 .ChatHeader-module__actions___SiF3 {

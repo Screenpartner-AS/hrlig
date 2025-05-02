@@ -1,10 +1,65 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styles from "../styles/ChatHeader.module.css";
 
-const ChatHeader = ({ onToggleInfo, onToggleAttachments, showAttachments, uploading }) => {
+const ChatHeader = ({
+	supportCase,
+	canEditTitle,
+	onTitleUpdate,
+	onToggleInfo,
+	onToggleAttachments,
+	showAttachments,
+	uploading
+}) => {
+	const [editing, setEditing] = useState(false);
+	const [tempTitle, setTempTitle] = useState("");
+
+	useEffect(() => {
+		// Update local state when supportCase changes
+		if (supportCase?.title?.rendered) {
+			setTempTitle(supportCase.title.rendered);
+		}
+	}, [supportCase?.id, supportCase?.title?.rendered]);
+
+	const currentTitle = tempTitle || "Support Chat";
+
+	const handleTitleSave = () => {
+		if (tempTitle.trim() && tempTitle !== supportCase?.title?.rendered) {
+			onTitleUpdate?.(tempTitle);
+		}
+		setEditing(false);
+	};
+
+	const handleKeyDown = (e) => {
+		if (e.key === "Enter") {
+			handleTitleSave();
+		}
+	};
+
 	return (
 		<div className={styles.header}>
-			<div className={styles.title}>Support Chat</div>
+			<div className={styles.title}>
+				{editing ? (
+					<input
+						type="text"
+						value={tempTitle}
+						onChange={(e) => setTempTitle(e.target.value)}
+						onBlur={handleTitleSave}
+						onKeyDown={handleKeyDown}
+						autoFocus
+						className={styles.titleInput}
+					/>
+				) : (
+					<div className={styles.titleDisplay}>
+						<span className={styles.titleText}>{currentTitle}</span>
+						{canEditTitle && (
+							<button className={styles.editButton} onClick={() => setEditing(true)} title="Edit title">
+								✏️
+							</button>
+						)}
+					</div>
+				)}
+			</div>
+
 			<div className={styles.actions}>
 				<button onClick={onToggleInfo} title="Toggle Info" className={styles.iconButton}>
 					<svg

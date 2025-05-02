@@ -58,6 +58,24 @@ class HRSC_REST_API
             'permission_callback' => '__return_true', // ⚠ adjust this later
         ]);
 
+        register_rest_route('hrsc/v1', '/support-cases/(?P<id>\d+)/title', [
+            'methods' => 'POST',
+            'callback' => [self::class, 'update_case_title'],
+            'permission_callback' => function () {
+                return current_user_can('edit_support_cases');
+            },
+            'args' => [
+                'id' => ['required' => true, 'type' => 'integer'],
+                'title' => ['required' => true, 'type' => 'string'],
+            ],
+        ]);
+
+        register_rest_route('hrsc/v1', '/session', [
+            'methods' => 'GET',
+            'callback' => [self::class, 'get_user_session'],
+            'permission_callback' => '__return_true',
+        ]);
+
     }
 
     // --------------------------
@@ -450,5 +468,50 @@ class HRSC_REST_API
         }
 
         return rest_ensure_response($response);
+    }
+
+    public static function update_case_title($request)
+    {
+        $post_id = (int) $request['id'];
+        $title = sanitize_text_field($request['title']);
+
+        if (!get_post($post_id)) {
+            return new WP_Error('not_found', __('Support case not found.', 'hr-support-chat'), ['status' => 404]);
+        }
+
+        $result = wp_update_post([
+            'ID' => $post_id,
+            'post_title' => $title,
+        ], true);
+
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        return [
+            'success' => true,
+            'title' => $title,
+        ];
+    }
+
+    public static function get_user_session($request)
+    {
+        if (is_user_logged_in()) {
+            $current_user = wp_get_current_user();
+
+            return [
+                'id' => $current_user->ID,
+                'email' => $current_user->user_email,
+                'firstName' => $current_user->first_name,
+                'roles' => $current_user->roles,
+            ];
+        }
+
+        // fallback for anonymous access
+        return [
+            'token' => sanitize_text_field($_GET['token'] ?? ''),
+            'email' => sanitize_email($_GET['email'] ?? ''),
+            'firstName' => sanitize_text_field($_GET['first_name'] ?? ''),
+        ];
     }
 }

@@ -28,6 +28,8 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	const { session } = useAuthSession();
 	const { cases, refreshCases, error, loading } = useSupportCases(session);
 	const { messages, refreshMessages } = useMessages(caseId);
+	const canEditTitle = session?.isHR || session?.isAdmin;
+	console.log(canEditTitle);
 
 	useEffect(() => {
 		const paramId = getQueryParam("case_id");
@@ -136,6 +138,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 				onDrop={handleDrop}
 			>
 				<ChatHeader
+					key={caseId}
 					onToggleInfo={() => {
 						setShowInfo((prev) => !prev);
 						setShowAttachments(false);
@@ -146,6 +149,24 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 					}}
 					showAttachments={showAttachments}
 					uploading={uploading}
+					supportCase={supportCase}
+					canEditTitle={canEditTitle}
+					onTitleUpdate={async (newTitle) => {
+						try {
+							await axios.post(
+								`/wp-json/hrsc/v1/support-cases/${caseId}/title`,
+								{ title: newTitle },
+								{
+									headers: {
+										"X-WP-Nonce": window.hrscChatVars?.nonce || ""
+									}
+								}
+							);
+							await refreshCases();
+						} catch (err) {
+							console.error("❌ Title update failed:", err);
+						}
+					}}
 				/>
 
 				{showAttachments && (

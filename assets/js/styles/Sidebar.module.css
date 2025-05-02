@@ -63,6 +63,7 @@
 	border-radius: 6px;
 	background-color: #ffffff;
 	font-size: 0.875rem;
+	margin-bottom: 10px;
 }
 
 .statusDot {
@@ -73,12 +74,12 @@
 	margin-right: 6px;
 }
 
-.statusOpen {
-	background-color: #10b981; /* green */
+.statusNew {
+	background-color: #4f54d6; /* green */
 }
 
 .statusOngoing {
-	background-color: #f97316; /* orange */
+	background-color: #10b981; /* orange */
 }
 
 .statusClosed {

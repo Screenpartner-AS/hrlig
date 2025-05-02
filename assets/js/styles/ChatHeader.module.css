@@ -15,6 +15,34 @@
 	font-size: 1.1rem;
 }
 
+.titleInput {
+	font-size: 1rem;
+	padding: 0.25rem 0.5rem;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	width: 100%;
+}
+
+.editButton {
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 0.85rem;
+	margin-left: 0.5rem;
+	color: #666;
+}
+
+.titleDisplay {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.titleText {
+	font-size: 1rem;
+	font-weight: 600;
+}
+
 .actions {
 	display: flex;
 	align-items: center;
