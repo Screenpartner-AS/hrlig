@@ -1137,6 +1137,34 @@ const SessionProvider = ({
     }
     setReady(true);
   }, [session]);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    const fetchWPUserSession = async () => {
+      try {
+        const res = await fetch("/wp-json/hrsc/v1/session", {
+          headers: {
+            "X-WP-Nonce": window.hrscChatVars?.nonce || ""
+          }
+        });
+        const data = await res.json();
+
+        // Only apply if logged in
+        if (data?.roles) {
+          setSession(prev => ({
+            ...prev,
+            ...data,
+            roles: data.roles
+          }));
+        }
+      } catch (err) {
+        console.error("❌ Failed to fetch WP session", err);
+      }
+    };
+
+    // Only fetch if WordPress nonce is present
+    if (window.hrscChatVars?.nonce) {
+      fetchWPUserSession();
+    }
+  }, []);
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(SessionContext.Provider, {
     value: {
       session,
@@ -1211,6 +1239,9 @@ const useAuthSession = () => {
   const isAuthenticated = !!(session?.token || session?.email && session?.firstName);
   const isHR = session?.roles?.includes("hr_advisor") || false;
   const isAdmin = session?.roles?.includes("administrator") || false;
+  console.log("isHR", isHR);
+  console.log("isAdmin", isAdmin);
+  console.log("session", session);
   return {
     session: {
       ...session,
@@ -1293,8 +1324,10 @@ const useSupportCases = (session, ready) => {
   const [cases, setCases] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   const [loading, setLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [error, setError] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
-  const isFetching = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false); // to prevent multiple overlaps
+  const isFetching = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
 
+  // Generate a stable key based on session identity
+  const sessionKey = session?.token || session?.email || session?.id || "guest";
   const fetchCases = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(async () => {
     if (!ready || !session || isFetching.current) return;
     const isLoggedIn = session.isAdmin || session.isHR;
@@ -1324,7 +1357,8 @@ const useSupportCases = (session, ready) => {
       setLoading(false);
       isFetching.current = false;
     }
-  }, [session, ready]);
+  }, [ready, sessionKey]); // 👈 Avoid entire session object here
+
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     fetchCases();
   }, [fetchCases]);

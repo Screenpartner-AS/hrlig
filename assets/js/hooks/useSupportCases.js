@@ -6,7 +6,10 @@ const useSupportCases = (session, ready) => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
 
-	const isFetching = useRef(false); // to prevent multiple overlaps
+	const isFetching = useRef(false);
+
+	// Generate a stable key based on session identity
+	const sessionKey = session?.token || session?.email || session?.id || "guest";
 
 	const fetchCases = useCallback(async () => {
 		if (!ready || !session || isFetching.current) return;
@@ -25,7 +28,6 @@ const useSupportCases = (session, ready) => {
 
 		try {
 			const queryParams = {};
-
 			if (!isLoggedIn) {
 				if (session.token) queryParams.token = session.token;
 				if (session.email) queryParams.email = session.email;
@@ -44,7 +46,7 @@ const useSupportCases = (session, ready) => {
 			setLoading(false);
 			isFetching.current = false;
 		}
-	}, [session, ready]);
+	}, [ready, sessionKey]); // 👈 Avoid entire session object here
 
 	useEffect(() => {
 		fetchCases();

@@ -23,6 +23,35 @@ export const SessionProvider = ({ children }) => {
 		setReady(true);
 	}, [session]);
 
+	useEffect(() => {
+		const fetchWPUserSession = async () => {
+			try {
+				const res = await fetch("/wp-json/hrsc/v1/session", {
+					headers: {
+						"X-WP-Nonce": window.hrscChatVars?.nonce || ""
+					}
+				});
+				const data = await res.json();
+
+				// Only apply if logged in
+				if (data?.roles) {
+					setSession((prev) => ({
+						...prev,
+						...data,
+						roles: data.roles
+					}));
+				}
+			} catch (err) {
+				console.error("❌ Failed to fetch WP session", err);
+			}
+		};
+
+		// Only fetch if WordPress nonce is present
+		if (window.hrscChatVars?.nonce) {
+			fetchWPUserSession();
+		}
+	}, []);
+
 	return (
 		<SessionContext.Provider
 			value={{
