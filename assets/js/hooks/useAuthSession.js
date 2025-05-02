@@ -9,10 +9,6 @@ const useAuthSession = () => {
 	const isHR = session?.roles?.includes("hr_advisor") || false;
 	const isAdmin = session?.roles?.includes("administrator") || false;
 
-	console.log("isHR", isHR);
-	console.log("isAdmin", isAdmin);
-	console.log("session", session);
-
 	return {
 		session: {
 			...session,

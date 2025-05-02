@@ -1,28 +1,40 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useEffect, useState } from "react";
 
 const SessionContext = createContext();
 
-const SESSION_KEY = "hrsc_session";
+const SESSION_KEY = "hrsc-session";
 
 export const SessionProvider = ({ children }) => {
-	const [session, setSession] = useState(() => {
-		try {
-			const stored = localStorage.getItem(SESSION_KEY);
-			return stored ? JSON.parse(stored) : null;
-		} catch {
-			return null;
-		}
-	});
-
+	const [session, setSession] = useState(null);
 	const [ready, setReady] = useState(false);
 
+	// Load from localStorage (for token-based users)
 	useEffect(() => {
-		if (session) {
-			localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+		const saved = localStorage.getItem(SESSION_KEY);
+		if (saved) {
+			try {
+				const parsed = JSON.parse(saved);
+				setSession(parsed);
+			} catch (err) {
+				console.error("Failed to parse saved session", err);
+			}
 		}
 		setReady(true);
+	}, []);
+
+	// Store anonymous sessions to localStorage
+	useEffect(() => {
+		if (!session) return;
+
+		// Only persist anonymous users
+		const isAnonymous = !session.roles || session.roles.length === 0;
+
+		if (isAnonymous) {
+			localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+		}
 	}, [session]);
 
+	// Fetch roles for logged-in users (1-time)
 	useEffect(() => {
 		const fetchWPUserSession = async () => {
 			try {
@@ -33,7 +45,6 @@ export const SessionProvider = ({ children }) => {
 				});
 				const data = await res.json();
 
-				// Only apply if logged in
 				if (data?.roles) {
 					setSession((prev) => ({
 						...prev,
@@ -46,23 +57,16 @@ export const SessionProvider = ({ children }) => {
 			}
 		};
 
-		// Only fetch if WordPress nonce is present
 		if (window.hrscChatVars?.nonce) {
 			fetchWPUserSession();
 		}
 	}, []);
 
-	return (
-		<SessionContext.Provider
-			value={{
-				session,
-				updateSession: (newSession) => setSession(newSession),
-				ready
-			}}
-		>
-			{children}
-		</SessionContext.Provider>
-	);
+	const updateSession = (data) => {
+		setSession((prev) => ({ ...prev, ...data }));
+	};
+
+	return <SessionContext.Provider value={{ session, updateSession, ready }}>{children}</SessionContext.Provider>;
 };
 
 export default SessionContext;
