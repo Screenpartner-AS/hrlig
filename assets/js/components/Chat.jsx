@@ -28,8 +28,17 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	const { session } = useAuthSession();
 	const { cases, refreshCases, error, loading } = useSupportCases(session);
 	const { messages, refreshMessages } = useMessages(caseId);
-	const canEditTitle = session?.isHR || session?.isAdmin;
-	console.log(canEditTitle);
+
+	// Utility: fetch full support case by ID
+	const fetchSupportCase = async (id) => {
+		try {
+			const res = await fetch(`/wp-json/wp/v2/support_case/${id}`);
+			const data = await res.json();
+			setSupportCase(data);
+		} catch (err) {
+			console.error("Failed to fetch support case:", err);
+		}
+	};
 
 	useEffect(() => {
 		const paramId = getQueryParam("case_id");
@@ -47,12 +56,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 
 	useEffect(() => {
 		if (!caseId) return;
-		const fetchCase = async () => {
-			const res = await fetch(`/wp-json/wp/v2/support_case/${caseId}`);
-			const data = await res.json();
-			setSupportCase(data);
-		};
-		fetchCase();
+		fetchSupportCase(caseId);
 	}, [caseId]);
 
 	const handleSelectCase = (id) => {
@@ -62,6 +66,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	};
 
 	const handleDragOver = (e) => e.preventDefault();
+
 	const handleDrop = (e) => {
 		e.preventDefault();
 		setDragActive(false);
@@ -97,10 +102,9 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 
 			try {
 				const response = await axios.post(`/wp-json/hrsc/v1/support-cases/${caseId}/upload`, formData, {
-					headers: {
-						"X-WP-Nonce": window.hrscChatVars?.nonce
-					}
+					headers: { "X-WP-Nonce": window.hrscChatVars?.nonce }
 				});
+
 				if (response.data.success) {
 					const res = await fetch(`/wp-json/hrsc/v1/support-cases/${caseId}/attachments`);
 					const data = await res.json();
@@ -113,20 +117,22 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 
 		setUploading(false);
 		await refreshMessages(caseId, session);
-		await refreshCases(); // 👈 refresh the sidebar cases
+		await refreshCases();
 	};
+
+	const canEditTitle = session?.isHR || session?.isAdmin;
 
 	if (!session) return null;
 
 	return (
 		<div className={styles.container}>
 			<Sidebar
-				selectedCaseId={caseId}
 				onSelectCase={handleSelectCase}
+				selectedCaseId={caseId}
 				cases={cases}
 				refreshCases={refreshCases}
-				loading={loading}
 				error={error}
+				loading={loading}
 			/>
 
 			<div
@@ -138,7 +144,8 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 				onDrop={handleDrop}
 			>
 				<ChatHeader
-					key={caseId}
+					supportCase={supportCase}
+					canEditTitle={canEditTitle}
 					onToggleInfo={() => {
 						setShowInfo((prev) => !prev);
 						setShowAttachments(false);
@@ -149,20 +156,16 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 					}}
 					showAttachments={showAttachments}
 					uploading={uploading}
-					supportCase={supportCase}
-					canEditTitle={canEditTitle}
 					onTitleUpdate={async (newTitle) => {
 						try {
 							await axios.post(
 								`/wp-json/hrsc/v1/support-cases/${caseId}/title`,
 								{ title: newTitle },
-								{
-									headers: {
-										"X-WP-Nonce": window.hrscChatVars?.nonce || ""
-									}
-								}
+								{ headers: { "X-WP-Nonce": window.hrscChatVars?.nonce || "" } }
 							);
+
 							await refreshCases();
+							await fetchSupportCase(caseId); // ✅ refresh supportCase to reflect new title
 						} catch (err) {
 							console.error("❌ Title update failed:", err);
 						}

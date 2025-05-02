@@ -151,8 +151,17 @@ const Chat = ({
     messages,
     refreshMessages
   } = (0,_hooks_useMessages__WEBPACK_IMPORTED_MODULE_6__["default"])(caseId);
-  const canEditTitle = session?.isHR || session?.isAdmin;
-  console.log(canEditTitle);
+
+  // Utility: fetch full support case by ID
+  const fetchSupportCase = async id => {
+    try {
+      const res = await fetch(`/wp-json/wp/v2/support_case/${id}`);
+      const data = await res.json();
+      setSupportCase(data);
+    } catch (err) {
+      console.error("Failed to fetch support case:", err);
+    }
+  };
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const paramId = getQueryParam("case_id");
     if (paramId && /^\d+$/.test(paramId)) {
@@ -167,12 +176,7 @@ const Chat = ({
   }, [caseId, cases, onSelectCase]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     if (!caseId) return;
-    const fetchCase = async () => {
-      const res = await fetch(`/wp-json/wp/v2/support_case/${caseId}`);
-      const data = await res.json();
-      setSupportCase(data);
-    };
-    fetchCase();
+    fetchSupportCase(caseId);
   }, [caseId]);
   const handleSelectCase = id => {
     setCaseId(id);
@@ -224,18 +228,19 @@ const Chat = ({
     }
     setUploading(false);
     await refreshMessages(caseId, session);
-    await refreshCases(); // 👈 refresh the sidebar cases
+    await refreshCases();
   };
+  const canEditTitle = session?.isHR || session?.isAdmin;
   if (!session) return null;
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].container
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_Sidebar__WEBPACK_IMPORTED_MODULE_1__["default"], {
-    selectedCaseId: caseId,
     onSelectCase: handleSelectCase,
+    selectedCaseId: caseId,
     cases: cases,
     refreshCases: refreshCases,
-    loading: loading,
-    error: error
+    error: error,
+    loading: loading
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].main,
     ref: dropRef,
@@ -244,7 +249,8 @@ const Chat = ({
     onDragLeave: handleDragLeave,
     onDrop: handleDrop
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatHeader__WEBPACK_IMPORTED_MODULE_3__["default"], {
-    key: caseId,
+    supportCase: supportCase,
+    canEditTitle: canEditTitle,
     onToggleInfo: () => {
       setShowInfo(prev => !prev);
       setShowAttachments(false);
@@ -255,8 +261,6 @@ const Chat = ({
     },
     showAttachments: showAttachments,
     uploading: uploading,
-    supportCase: supportCase,
-    canEditTitle: canEditTitle,
     onTitleUpdate: async newTitle => {
       try {
         await axios__WEBPACK_IMPORTED_MODULE_10__["default"].post(`/wp-json/hrsc/v1/support-cases/${caseId}/title`, {
@@ -267,6 +271,7 @@ const Chat = ({
           }
         });
         await refreshCases();
+        await fetchSupportCase(caseId); // ✅ refresh supportCase to reflect new title
       } catch (err) {
         console.error("❌ Title update failed:", err);
       }
@@ -381,7 +386,11 @@ const ChatHeader = ({
       setTempTitle(supportCase.title.rendered);
     }
   }, [supportCase?.id, supportCase?.title?.rendered]);
-  const currentTitle = tempTitle || "Support Chat";
+  const handleStartEditing = () => {
+    setTempTitle(supportCase?.title?.rendered || "");
+    setEditing(true);
+  };
+  const currentTitle = supportCase?.title?.rendered || "Untitled Case";
   const handleTitleSave = () => {
     if (tempTitle.trim() && tempTitle !== supportCase?.title?.rendered) {
       onTitleUpdate?.(tempTitle);
@@ -411,7 +420,7 @@ const ChatHeader = ({
     className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].titleText
   }, currentTitle), canEditTitle && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
     className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].editButton,
-    onClick: () => setEditing(true),
+    onClick: handleStartEditing,
     title: "Edit title"
   }, "\u270F\uFE0F"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].actions

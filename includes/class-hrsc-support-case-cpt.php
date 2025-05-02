@@ -39,7 +39,7 @@ class HRSC_Support_Case_CPT
             'map_meta_cap' => true,
             'supports' => ['title', 'editor', 'comments'],
             'has_archive' => false,
-            'show_in_rest' => false,
+            'show_in_rest' => true,
         ];
 
         register_post_type('support_case', $args);

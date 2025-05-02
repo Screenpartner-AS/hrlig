@@ -20,7 +20,12 @@ const ChatHeader = ({
 		}
 	}, [supportCase?.id, supportCase?.title?.rendered]);
 
-	const currentTitle = tempTitle || "Support Chat";
+	const handleStartEditing = () => {
+		setTempTitle(supportCase?.title?.rendered || "");
+		setEditing(true);
+	};
+
+	const currentTitle = supportCase?.title?.rendered || "Untitled Case";
 
 	const handleTitleSave = () => {
 		if (tempTitle.trim() && tempTitle !== supportCase?.title?.rendered) {
@@ -52,7 +57,7 @@ const ChatHeader = ({
 					<div className={styles.titleDisplay}>
 						<span className={styles.titleText}>{currentTitle}</span>
 						{canEditTitle && (
-							<button className={styles.editButton} onClick={() => setEditing(true)} title="Edit title">
+							<button className={styles.editButton} onClick={handleStartEditing} title="Edit title">
 								✏️
 							</button>
 						)}
