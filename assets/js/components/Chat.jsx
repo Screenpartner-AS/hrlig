@@ -110,6 +110,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 		}
 
 		setUploading(false);
+		await refreshMessages(caseId, session);
 	};
 
 	if (!session) return null;

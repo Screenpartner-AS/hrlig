@@ -219,6 +219,7 @@ const Chat = ({
       }
     }
     setUploading(false);
+    await refreshMessages(caseId, session);
   };
   if (!session) return null;
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
@@ -498,7 +499,12 @@ const ChatWindow = ({
     }, 10000);
     return () => clearInterval(interval);
   }, [caseId, session]);
+  const lastMessageId = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    if (!messages.length) return;
+    const latest = messages[messages.length - 1];
+    if (lastMessageId.current === latest.id) return;
+    lastMessageId.current = latest.id;
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({
         behavior: "smooth"
@@ -620,8 +626,11 @@ const ChatWindow = ({
       key: idx,
       className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].messageRow
     }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: `${_styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].bubble} ${bubbleClass}`
-    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, msg.content)));
+      className: `${_styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].bubble} ${bubbleClass}`,
+      dangerouslySetInnerHTML: {
+        __html: msg.content
+      }
+    }));
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     ref: messagesEndRef
   }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {

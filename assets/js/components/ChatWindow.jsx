@@ -45,7 +45,16 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 		return () => clearInterval(interval);
 	}, [caseId, session]);
 
+	const lastMessageId = useRef(null);
+
 	useEffect(() => {
+		if (!messages.length) return;
+
+		const latest = messages[messages.length - 1];
+		if (lastMessageId.current === latest.id) return;
+
+		lastMessageId.current = latest.id;
+
 		if (messagesEndRef.current) {
 			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
 		}
@@ -170,9 +179,10 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 						const bubbleClass = msg.is_hr ? styles.hrBubble : styles.userBubble;
 						return (
 							<div key={idx} className={styles.messageRow}>
-								<div className={`${styles.bubble} ${bubbleClass}`}>
-									<p>{msg.content}</p>
-								</div>
+								<div
+									className={`${styles.bubble} ${bubbleClass}`}
+									dangerouslySetInnerHTML={{ __html: msg.content }}
+								></div>
 							</div>
 						);
 					})}

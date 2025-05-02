@@ -23,6 +23,13 @@ h4 {
 		border-radius: 5px;
 	}
 
+	span {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		width: 70%;
+	}
+
 	&:hover {
 		background-color: #f1f1f1;
 	}

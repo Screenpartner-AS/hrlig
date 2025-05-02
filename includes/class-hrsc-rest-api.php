@@ -66,12 +66,12 @@ class HRSC_REST_API
 
     private static function validate_token($post_id)
     {
-        // Get token, email, and first name from $_POST if available
+        // 1. Check $_POST first (form submissions or file uploads)
         $token = isset($_POST['token']) ? sanitize_text_field($_POST['token']) : null;
         $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : null;
         $first_name = isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : null;
 
-        // Fallback to JSON input for non-formdata requests
+        // 2. Fallback: JSON body (used in fetch calls with body)
         if (!$token && !$email && !$first_name) {
             $body = json_decode(file_get_contents('php://input'), true);
             if (is_array($body)) {
@@ -81,11 +81,19 @@ class HRSC_REST_API
             }
         }
 
+        // ✅ 3. Fallback: GET parameters (used in GET requests)
+        if (!$token && !$email && !$first_name) {
+            $token = isset($_GET['token']) ? sanitize_text_field($_GET['token']) : null;
+            $email = isset($_GET['email']) ? sanitize_email($_GET['email']) : null;
+            $first_name = isset($_GET['first_name']) ? sanitize_text_field($_GET['first_name']) : null;
+        }
+
+        // Validate against stored post meta
         $stored_token = get_post_meta($post_id, '_hrsc_token', true);
         $stored_email = get_post_meta($post_id, '_hrsc_employee_email', true);
         $stored_first_name = get_post_meta($post_id, '_hrsc_employee_first_name', true);
 
-        if ($token && $token === $stored_token) {
+        if ($token && hash_equals($stored_token, $token)) {
             return true;
         }
 
@@ -176,8 +184,16 @@ class HRSC_REST_API
         $post_id = (int) $request['id'];
         if (!get_post($post_id))
             return new WP_Error('not_found', __('Case not found.', 'hr-support-chat'), ['status' => 404]);
-        if (!is_user_logged_in() && !self::validate_token($post_id)) {
-            return new WP_Error('unauthorized', __('Unauthorized', 'hr-support-chat'), ['status' => 401]);
+
+        $user_is_logged_in = is_user_logged_in();
+        $token_is_valid = self::validate_token($post_id);
+
+        if (!$user_is_logged_in && !$token_is_valid) {
+            return new WP_Error(
+                'unauthorized',
+                __('Unauthorized', 'hr-support-chat'),
+                ['status' => 401]
+            );
         }
 
         $comments = get_comments([
@@ -185,7 +201,7 @@ class HRSC_REST_API
             'orderby' => 'comment_date',
             'order' => 'ASC',
             'status' => 'approve',
-            'type__in' => ['comment', 'hrsc_system'],
+            'type__in' => ['comment', 'hrsc_system', 'hrsc_attachment']
         ]);
 
         $messages = [];
@@ -319,9 +335,6 @@ class HRSC_REST_API
 
     public static function hrsc_handle_file_upload($request)
     {
-        error_log('Current user ID: ' . get_current_user_id());
-        error_log('Is logged in: ' . (is_user_logged_in() ? 'yes' : 'no'));
-        error_log('Can upload: ' . (current_user_can('upload_files') ? 'yes' : 'no'));
         $post_id = $request['id'];
 
         if (!get_post($post_id)) {
@@ -332,22 +345,33 @@ class HRSC_REST_API
             return new WP_Error('no_file', __('No file provided.', 'hr-support-chat'), ['status' => 400]);
         }
 
-        // Add check for token or user permissions
-        // that works with wordpress upload through REST and react / axios
-        // Support both logged-in HR users and token-based employee users
+        // AUTH: Logged-in or token/email
         if (is_user_logged_in()) {
             if (!current_user_can('upload_files')) {
                 return new WP_Error('unauthorized', __('Logged-in user not allowed to upload file.', 'hr-support-chat'), ['status' => 403]);
             }
         } else {
             if (!self::validate_token($post_id)) {
-                return new WP_Error('unauthorized', __('Invalid token or session. Not allowed to upload file.', 'hr-support-chat'), ['status' => 401]);
+                return new WP_Error('unauthorized', __('Invalid token or session.', 'hr-support-chat'), ['status' => 401]);
             }
         }
 
+        // Parse token/email from request body (JSON or POST)
+        $token = $_POST['token'] ?? '';
+        $email = $_POST['email'] ?? '';
+        $first_name = $_POST['first_name'] ?? '';
+
+        if (empty($email) || empty($first_name)) {
+            $body = json_decode(file_get_contents('php://input'), true);
+            $email = $body['email'] ?? '';
+            $first_name = $body['first_name'] ?? '';
+        }
+
+        $email = sanitize_email($email);
+        $first_name = sanitize_text_field($first_name);
+
         $file = $_FILES['file'];
 
-        // Use WordPress functions to handle the upload
         require_once ABSPATH . 'wp-admin/includes/file.php';
         $upload = wp_handle_upload($file, ['test_form' => false]);
 
@@ -368,12 +392,34 @@ class HRSC_REST_API
         $attach_data = wp_generate_attachment_metadata($attach_id, $upload['file']);
         wp_update_attachment_metadata($attach_id, $attach_data);
 
+        // 📎 Create a chat comment with the file link
+        $comment_content = sprintf(
+            __('📎 Uploaded file: <br><a class="uploaded-file" href="%s" target="_blank" rel="noopener noreferrer"><img src="%s" alt="%s"></a>', 'hr-support-chat'),
+            esc_url(wp_get_attachment_url($attach_id)),
+            esc_url(wp_get_attachment_image_src($attach_id, 'large')[0]),
+            esc_html(basename($file['name']))
+        );
+
+        $commentdata = [
+            'comment_post_ID' => $post_id,
+            'comment_content' => $comment_content,
+            'comment_type' => 'hrsc_attachment',
+            'comment_approved' => 1,
+            'comment_author' => $first_name ?: 'Anonymous',
+            'comment_author_email' => $email,
+            'comment_author_url' => '',
+            'comment_agent' => 'hrsc-uploader',
+        ];
+
+        wp_insert_comment($commentdata);
+
         return [
             'success' => true,
             'attachment_id' => $attach_id,
             'url' => wp_get_attachment_url($attach_id),
         ];
     }
+
 
     public static function get_attachments($request)
     {
