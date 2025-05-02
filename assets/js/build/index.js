@@ -143,12 +143,13 @@ const Chat = ({
   } = (0,_hooks_useAuthSession__WEBPACK_IMPORTED_MODULE_8__["default"])();
   const {
     cases,
-    refreshCases
+    refreshCases,
+    error,
+    loading
   } = (0,_hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_7__["default"])(session);
   const {
     messages,
-    refreshMessages,
-    loading
+    refreshMessages
   } = (0,_hooks_useMessages__WEBPACK_IMPORTED_MODULE_6__["default"])(caseId);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const paramId = getQueryParam("case_id");
@@ -227,8 +228,12 @@ const Chat = ({
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].container
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_Sidebar__WEBPACK_IMPORTED_MODULE_1__["default"], {
+    selectedCaseId: caseId,
     onSelectCase: handleSelectCase,
-    selectedCaseId: caseId
+    cases: cases,
+    refreshCases: refreshCases,
+    loading: loading,
+    error: error
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].main,
     ref: dropRef,
@@ -479,7 +484,6 @@ const ChatWindow = ({
   const [dragActive, setDragActive] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const refreshAndMarkReady = async () => {
     await refreshMessages(caseId, session);
-    await refreshCases(); // ✅ also refresh sidebar items
     if (!firstLoadDone) setFirstLoadDone(true);
   };
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
@@ -980,16 +984,15 @@ __webpack_require__.r(__webpack_exports__);
 
 const Sidebar = ({
   selectedCaseId,
-  onSelectCase
+  onSelectCase,
+  cases,
+  refreshCases,
+  loading,
+  error
 }) => {
   const {
     session
   } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(_contexts_SessionContext__WEBPACK_IMPORTED_MODULE_2__["default"]);
-  const {
-    cases,
-    loading,
-    error
-  } = (0,_hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_1__["default"])(session);
   const [filter, setFilter] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("All");
   const filteredCases = cases.filter(c => filter === "All" ? true : c.status === filter);
   const renderStatusDot = status => {

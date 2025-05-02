@@ -3,9 +3,8 @@ import useSupportCases from "../hooks/useSupportCases";
 import SessionContext from "../contexts/SessionContext";
 import styles from "../styles/Sidebar.module.css";
 
-const Sidebar = ({ selectedCaseId, onSelectCase }) => {
+const Sidebar = ({ selectedCaseId, onSelectCase, cases, refreshCases, loading, error }) => {
 	const { session } = useContext(SessionContext);
-	const { cases, loading, error } = useSupportCases(session);
 
 	const [filter, setFilter] = useState("All");
 

@@ -26,8 +26,8 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	const dropRef = useRef(null);
 
 	const { session } = useAuthSession();
-	const { cases, refreshCases } = useSupportCases(session);
-	const { messages, refreshMessages, loading } = useMessages(caseId);
+	const { cases, refreshCases, error, loading } = useSupportCases(session);
+	const { messages, refreshMessages } = useMessages(caseId);
 
 	useEffect(() => {
 		const paramId = getQueryParam("case_id");
@@ -118,7 +118,14 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 
 	return (
 		<div className={styles.container}>
-			<Sidebar onSelectCase={handleSelectCase} selectedCaseId={caseId} />
+			<Sidebar
+				selectedCaseId={caseId}
+				onSelectCase={handleSelectCase}
+				cases={cases}
+				refreshCases={refreshCases}
+				loading={loading}
+				error={error}
+			/>
 
 			<div
 				className={styles.main}

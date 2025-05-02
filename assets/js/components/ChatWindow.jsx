@@ -16,7 +16,6 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 
 	const refreshAndMarkReady = async () => {
 		await refreshMessages(caseId, session);
-		await refreshCases(); // ✅ also refresh sidebar items
 		if (!firstLoadDone) setFirstLoadDone(true);
 	};
 
