@@ -183,6 +183,11 @@ const Chat = ({
     setCaseId(id);
     onSelectCase?.(id);
     setAttachments([]);
+
+    // ✅ Push new case ID into the URL
+    const url = new URL(window.location.href);
+    url.searchParams.set("case_id", id);
+    window.history.pushState({}, "", url);
   };
   const handleDragOver = e => e.preventDefault();
   const handleDrop = e => {
@@ -959,7 +964,11 @@ const SessionGate = ({
     }
   };
   if (!ready) return null;
-  if (session?.token || session?.email && session?.firstName) return children;
+
+  // Accept either token/email users OR logged-in WP users
+  const isTokenSession = session?.token || session?.email && session?.firstName;
+  const isWPUser = Array.isArray(session?.roles) && session.roles.length > 0;
+  if (isTokenSession || isWPUser) return children;
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].container
   }, view === "mode" ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
@@ -1076,12 +1085,29 @@ const Sidebar = ({
   error
 }) => {
   const [filter, setFilter] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("All");
+  const scrollContainerRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  const activeCaseRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const filteredCases = (0,react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(() => {
     if (filter === "All") return cases;
     return cases.filter(c => c.status === filter);
   }, [cases, filter]);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
+    if (!selectedCaseId || !activeCaseRef.current || !scrollContainerRef.current) return;
+    const container = scrollContainerRef.current;
+    const active = activeCaseRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const itemRect = active.getBoundingClientRect();
+    const isOutOfView = itemRect.top < containerRect.top || itemRect.bottom > containerRect.bottom;
+    if (isOutOfView) {
+      active.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+    }
+  }, [filteredCases, selectedCaseId]);
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("aside", {
-    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].sidebar
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].sidebar,
+    ref: scrollContainerRef
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].heading
   }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Support Cases", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
@@ -1105,17 +1131,21 @@ const Sidebar = ({
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].loading
   }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Loading…", "hr-support-chat")) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseList
-  }, filteredCases.map(c => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
-    key: c.id,
-    onClick: () => onSelectCase(c.id),
-    className: `${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseItem} ${c.id === selectedCaseId ? _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].active : ""}`
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseTitle
-  }, c.title), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseStatus
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
-    className: `${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].statusDot} ${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"]["status" + c.status]}`
-  }), c.status)))));
+  }, filteredCases.map(c => {
+    const isActive = c.id === selectedCaseId;
+    return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
+      key: c.id,
+      ref: isActive ? activeCaseRef : null,
+      onClick: () => onSelectCase(c.id),
+      className: `${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseItem} ${isActive ? _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].active : ""}`
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseTitle
+    }, c.title), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseStatus
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+      className: `${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].statusDot} ${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"]["status" + c.status]}`
+    }), c.status));
+  })));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Sidebar);
 
@@ -1143,63 +1173,58 @@ const SessionProvider = ({
 }) => {
   const [session, setSession] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const [ready, setReady] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-
-  // Load from localStorage (for token-based users)
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    const saved = localStorage.getItem(SESSION_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setSession(parsed);
-      } catch (err) {
-        console.error("Failed to parse saved session", err);
-      }
-    }
-    setReady(true);
-  }, []);
-
-  // Store anonymous sessions to localStorage
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    if (!session) return;
-
-    // Only persist anonymous users
-    const isAnonymous = !session.roles || session.roles.length === 0;
-    if (isAnonymous) {
-      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    }
-  }, [session]);
-
-  // Fetch roles for logged-in users (1-time)
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    const fetchWPUserSession = async () => {
-      try {
-        const res = await fetch("/wp-json/hrsc/v1/session", {
-          headers: {
-            "X-WP-Nonce": window.hrscChatVars?.nonce || ""
-          }
-        });
-        const data = await res.json();
-        if (data?.roles) {
-          setSession(prev => ({
-            ...prev,
-            ...data,
-            roles: data.roles
-          }));
-        }
-      } catch (err) {
-        console.error("❌ Failed to fetch WP session", err);
-      }
-    };
-    if (window.hrscChatVars?.nonce) {
-      fetchWPUserSession();
-    }
-  }, []);
   const updateSession = data => {
     setSession(prev => ({
       ...prev,
       ...data
     }));
   };
+  const fetchWPUserSession = async () => {
+    try {
+      const res = await fetch("/wp-json/hrsc/v1/session", {
+        headers: {
+          "X-WP-Nonce": window.hrscChatVars?.nonce || ""
+        }
+      });
+      const data = await res.json();
+      if (data?.roles) {
+        setSession(prev => ({
+          ...prev,
+          ...data,
+          roles: data.roles
+        }));
+      }
+    } catch (err) {
+      console.error("❌ Failed to fetch WP session", err);
+    } finally {
+      setReady(true);
+    }
+  };
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    const saved = localStorage.getItem(SESSION_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setSession(parsed);
+        setReady(true);
+        return; // ✅ Token session loaded, skip WP fetch
+      } catch (err) {
+        console.error("Failed to parse saved session", err);
+      }
+    }
+    if (window.hrscChatVars?.nonce) {
+      fetchWPUserSession();
+    } else {
+      setReady(true); // No session at all
+    }
+  }, []);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    if (!session) return;
+    const isTokenUser = !session.roles || session.roles.length === 0;
+    if (isTokenUser) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    }
+  }, [session]);
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(SessionContext.Provider, {
     value: {
       session,

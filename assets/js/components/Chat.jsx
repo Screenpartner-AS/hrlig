@@ -63,6 +63,11 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 		setCaseId(id);
 		onSelectCase?.(id);
 		setAttachments([]);
+
+		// ✅ Push new case ID into the URL
+		const url = new URL(window.location.href);
+		url.searchParams.set("case_id", id);
+		window.history.pushState({}, "", url);
 	};
 
 	const handleDragOver = (e) => e.preventDefault();

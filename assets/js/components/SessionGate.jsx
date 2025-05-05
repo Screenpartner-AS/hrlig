@@ -63,7 +63,12 @@ const SessionGate = ({ children }) => {
 	};
 
 	if (!ready) return null;
-	if (session?.token || (session?.email && session?.firstName)) return children;
+
+	// Accept either token/email users OR logged-in WP users
+	const isTokenSession = session?.token || (session?.email && session?.firstName);
+	const isWPUser = Array.isArray(session?.roles) && session.roles.length > 0;
+
+	if (isTokenSession || isWPUser) return children;
 
 	return (
 		<div className={styles.container}>

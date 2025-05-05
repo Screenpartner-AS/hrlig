@@ -93,8 +93,7 @@ class HRSC_Meta_Boxes
     public static function render_chat_button($post)
     {
         $url = add_query_arg([
-            'case_id' => $post->ID,
-            'hr_mode' => 1,
+            'case_id' => $post->ID
         ], site_url('/chat/'));
 
         echo '<p><a href="' . esc_url($url) . '" target="_blank" class="button button-primary">';
