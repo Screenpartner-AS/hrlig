@@ -21,12 +21,12 @@ export const SessionProvider = ({ children }) => {
 			});
 			const data = await res.json();
 
-			if (data?.roles) {
-				setSession((prev) => ({
-					...prev,
-					...data,
+			if (data?.roles?.length) {
+				setSession({
+					email: data.email,
+					firstName: data.firstName,
 					roles: data.roles
-				}));
+				});
 			}
 		} catch (err) {
 			console.error("❌ Failed to fetch WP session", err);
@@ -37,21 +37,30 @@ export const SessionProvider = ({ children }) => {
 
 	useEffect(() => {
 		const saved = localStorage.getItem(SESSION_KEY);
-		if (saved) {
-			try {
-				const parsed = JSON.parse(saved);
-				setSession(parsed);
-				setReady(true);
-				return; // ✅ Token session loaded, skip WP fetch
-			} catch (err) {
-				console.error("Failed to parse saved session", err);
-			}
-		}
 
+		const tryLoadTokenSession = () => {
+			if (saved) {
+				try {
+					const parsed = JSON.parse(saved);
+					setSession(parsed);
+					setReady(true);
+					return true;
+				} catch (err) {
+					console.error("Failed to parse saved session", err);
+				}
+			}
+			return false;
+		};
+
+		// ✅ If logged in, always prefer WP session fetch
 		if (window.hrscChatVars?.nonce) {
 			fetchWPUserSession();
-		} else {
-			setReady(true); // No session at all
+			return;
+		}
+
+		// ✅ Only fall back to token session if not logged in
+		if (!tryLoadTokenSession()) {
+			setReady(true);
 		}
 	}, []);
 

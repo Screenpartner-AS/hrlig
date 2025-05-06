@@ -50,6 +50,8 @@ add_action('wp_enqueue_scripts', function () {
             true
         );
 
+        $current_user = wp_get_current_user();
+
         // Add REST URL + nonce
         wp_localize_script('hrsc-chat-app', 'hrscChatVars', [
             'restUrl' => esc_url_raw(rest_url('hrsc/v1')),

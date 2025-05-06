@@ -7,9 +7,9 @@
 	align-items: flex-start;
 	padding: 12px 16px;
 	border-radius: 20px;
-	border: 1px solid #d1d5db;
+	border: 1px solid var(--color-gray-dark);
 	background-color: #fff;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 2px 9px rgba(0, 0, 0, 0.08);
 	min-height: 104px;
 }
 

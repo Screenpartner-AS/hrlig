@@ -65,8 +65,7 @@
 }
 
 .userBubble {
-	background-color: #ffffff;
-	border: 1px solid #e5e7eb;
+	background-color: var(--color-gray);
 	align-self: flex-start;
 }
 
@@ -74,7 +73,6 @@
 	background-color: #dcfce7;
 	align-self: flex-end;
 	margin-left: auto;
-	border: 1px solid #d5f1df;
 }
 
 .meta {
