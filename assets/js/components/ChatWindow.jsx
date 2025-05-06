@@ -14,6 +14,7 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 	const [firstLoadDone, setFirstLoadDone] = useState(false);
 	const [statusMessage, setStatusMessage] = useState(null);
 	const [dragActive, setDragActive] = useState(false);
+	const [pendingFiles, setPendingFiles] = useState([]);
 
 	const refreshAndMarkReady = async () => {
 		await refreshMessages(caseId, session);
@@ -116,14 +117,16 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 	const handleDrop = (e) => {
 		e.preventDefault();
 		setDragActive(false);
+
 		if (e.dataTransfer.files?.length > 0) {
-			handleFiles(e.dataTransfer.files);
-			e.dataTransfer.clearData();
+			const droppedFiles = Array.from(e.dataTransfer.files);
+			setPendingFiles((prev) => [...prev, ...droppedFiles]);
 		}
 	};
 
 	const handleDragOver = (e) => {
 		e.preventDefault();
+		setDragActive(true);
 	};
 
 	useEffect(() => {
@@ -156,7 +159,7 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 	return (
 		<div className={styles.chatContainer} ref={dropZoneRef} onDragOver={handleDragOver} onDrop={handleDrop}>
 			{dragActive && (
-				<div className={styles.dragOverlay}>
+				<div className={styles.dragOverlay} onDragLeave={() => setDragActive(false)}>
 					<div className={styles.dragMessage}>{__("Drop files to upload", "hr-support-chat")}</div>
 				</div>
 			)}
@@ -201,15 +204,13 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 					onChange={(e) => handleFiles(e.target.files)}
 				/>
 				<div className={styles.inputWrapper}>
-					{/* Upload button */}
-					<button
-						className={styles.uploadButton}
-						onClick={() => fileInputRef.current?.click()}
-						aria-label={__("Upload file", "hr-support-chat")}
-					>
-						+
-					</button>
-					<MessageInput caseId={caseId} refreshMessages={refreshMessages} refreshCases={refreshCases} />
+					<MessageInput
+						caseId={caseId}
+						refreshMessages={refreshMessages}
+						refreshCases={refreshCases}
+						pendingFiles={pendingFiles}
+						setPendingFiles={setPendingFiles}
+					/>
 				</div>
 			</div>
 		</div>

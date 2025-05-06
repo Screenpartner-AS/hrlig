@@ -567,6 +567,7 @@ const ChatWindow = ({
   const [firstLoadDone, setFirstLoadDone] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [statusMessage, setStatusMessage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const [dragActive, setDragActive] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [pendingFiles, setPendingFiles] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   const refreshAndMarkReady = async () => {
     await refreshMessages(caseId, session);
     if (!firstLoadDone) setFirstLoadDone(true);
@@ -658,12 +659,13 @@ const ChatWindow = ({
     e.preventDefault();
     setDragActive(false);
     if (e.dataTransfer.files?.length > 0) {
-      handleFiles(e.dataTransfer.files);
-      e.dataTransfer.clearData();
+      const droppedFiles = Array.from(e.dataTransfer.files);
+      setPendingFiles(prev => [...prev, ...droppedFiles]);
     }
   };
   const handleDragOver = e => {
     e.preventDefault();
+    setDragActive(true);
   };
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const area = dropZoneRef.current;
@@ -695,7 +697,8 @@ const ChatWindow = ({
     onDragOver: handleDragOver,
     onDrop: handleDrop
   }, dragActive && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].dragOverlay
+    className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].dragOverlay,
+    onDragLeave: () => setDragActive(false)
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].dragMessage
   }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)("Drop files to upload", "hr-support-chat"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
@@ -739,14 +742,12 @@ const ChatWindow = ({
     onChange: e => handleFiles(e.target.files)
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].inputWrapper
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
-    className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].uploadButton,
-    onClick: () => fileInputRef.current?.click(),
-    "aria-label": (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)("Upload file", "hr-support-chat")
-  }, "+"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_MessageInput__WEBPACK_IMPORTED_MODULE_1__["default"], {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_MessageInput__WEBPACK_IMPORTED_MODULE_1__["default"], {
     caseId: caseId,
     refreshMessages: refreshMessages,
-    refreshCases: refreshCases
+    refreshCases: refreshCases,
+    pendingFiles: pendingFiles,
+    setPendingFiles: setPendingFiles
   }))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ChatWindow);
@@ -770,6 +771,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../styles/MessageInput.module.css */ "./assets/js/styles/MessageInput.module.css");
 /* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @wordpress/i18n */ "@wordpress/i18n");
 /* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
+
 
 
 
@@ -783,10 +786,12 @@ const MessageInput = ({
 }) => {
   const [message, setMessage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("");
   const [sending, setSending] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [pendingFiles, setPendingFiles] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   const {
     session
   } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(_contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__["default"]);
   const textareaRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  const fileInputRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     textareaRef.current?.focus();
   }, [caseId]);
@@ -799,17 +804,35 @@ const MessageInput = ({
   };
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() && pendingFiles.length === 0) return;
     setSending(true);
     try {
-      await (0,_api_apiClient__WEBPACK_IMPORTED_MODULE_2__.apiFetch)(`/support-cases/${caseId}/messages`, "POST", {
-        message,
-        token: session.token,
-        email: session.email,
-        first_name: session.firstName,
-        website: ""
-      });
+      // Send message first
+      if (message.trim()) {
+        await (0,_api_apiClient__WEBPACK_IMPORTED_MODULE_2__.apiFetch)(`/support-cases/${caseId}/messages`, "POST", {
+          message,
+          token: session.token,
+          email: session.email,
+          first_name: session.firstName,
+          website: ""
+        });
+      }
+
+      // Upload files after message
+      for (const file of pendingFiles) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("token", session.token || "");
+        formData.append("email", session.email || "");
+        formData.append("first_name", session.firstName || "");
+        await axios__WEBPACK_IMPORTED_MODULE_5__["default"].post(`/wp-json/hrsc/v1/support-cases/${caseId}/upload`, formData, {
+          headers: {
+            "X-WP-Nonce": window.hrscChatVars?.nonce
+          }
+        });
+      }
       setMessage("");
+      setPendingFiles([]);
       await refreshMessages(caseId, session);
       await refreshCases();
       textareaRef.current?.focus();
@@ -830,10 +853,42 @@ const MessageInput = ({
     setMessage(e.target.value);
     handleResize();
   };
+  const handleFileSelect = e => {
+    if (e.target.files?.length > 0) {
+      setPendingFiles(prev => [...prev, ...Array.from(e.target.files)]);
+      e.target.value = "";
+    }
+  };
+  const handleFileRemove = index => {
+    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+  };
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
     onSubmit: handleSubmit,
     className: _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].form
+  }, pendingFiles.length > 0 && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].previewWrapper
+  }, pendingFiles.map((file, index) => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    key: index,
+    className: _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].filePreview
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].previewThumb
+  }, file.type.startsWith("image/") ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("img", {
+    src: URL.createObjectURL(file),
+    alt: file.name
+  }) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].fileIcon
+  }, "\uD83D\uDCC4")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].previewInfo
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+    className: _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].fileName
+  }, file.name), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+    className: _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].fileType
+  }, file.type || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)("Unknown", "hr-support-chat"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "button",
+    onClick: () => handleFileRemove(index),
+    className: _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].removeButton,
+    "aria-label": (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)("Remove file", "hr-support-chat")
+  }, "\xD7")))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].inputWrapper
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("textarea", {
     ref: textareaRef,
@@ -843,9 +898,22 @@ const MessageInput = ({
     placeholder: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)("Type your message...", "hr-support-chat"),
     className: _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].textarea,
     rows: 1
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "file",
+    ref: fileInputRef,
+    style: {
+      display: "none"
+    },
+    multiple: true,
+    onChange: handleFileSelect
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "button",
+    className: _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].uploadTrigger,
+    onClick: () => fileInputRef.current?.click(),
+    "aria-label": (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)("Upload files", "hr-support-chat")
+  }, "+"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
     type: "submit",
-    disabled: sending || !message.trim(),
+    disabled: sending || !message.trim() && pendingFiles.length === 0,
     "aria-label": (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)("Send message", "hr-support-chat"),
     className: _styles_MessageInput_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].sendButton
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("svg", {
@@ -1510,7 +1578,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 // extracted by mini-css-extract-plugin
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"form":"MessageInput-module__form__JwsTx","inputWrapper":"MessageInput-module__inputWrapper__f2dEV","textarea":"MessageInput-module__textarea__KuTmN","sendButton":"MessageInput-module__sendButton__rkM4Q"});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"form":"MessageInput-module__form__JwsTx","inputWrapper":"MessageInput-module__inputWrapper__f2dEV","textarea":"MessageInput-module__textarea__KuTmN","sendButton":"MessageInput-module__sendButton__rkM4Q","previewWrapper":"MessageInput-module__previewWrapper__du2Dl","filePreview":"MessageInput-module__filePreview__CMwvU","previewThumb":"MessageInput-module__previewThumb__EgX1A","fileIcon":"MessageInput-module__fileIcon__ZGNCP","previewInfo":"MessageInput-module__previewInfo__KuYfi","fileName":"MessageInput-module__fileName__XO0WG","fileType":"MessageInput-module__fileType__Ywy0f","removeButton":"MessageInput-module__removeButton__iMw71","uploadTrigger":"MessageInput-module__uploadTrigger__HKie4"});
 
 /***/ }),
 

@@ -167,6 +167,112 @@
 	cursor: not-allowed;
 }
 
+.MessageInput-module__previewWrapper__du2Dl {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.MessageInput-module__filePreview__CMwvU {
+	position: relative;
+	display: flex;
+	align-items: center;
+	background: #f3f3f3;
+	border-radius: 6px;
+	padding: 6px 10px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+	max-width: 260px;
+	overflow: hidden;
+}
+
+.MessageInput-module__previewThumb__EgX1A {
+	width: 40px;
+	height: 40px;
+	border-radius: 4px;
+	overflow: hidden;
+	background: #e1e1e1;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-left: 10px;
+	flex-shrink: 0;
+}
+
+.MessageInput-module__previewThumb__EgX1A img {
+	max-width: 100%;
+	max-height: 100%;
+	-o-object-fit: cover;
+	   object-fit: cover;
+	border-radius: 4px;
+}
+
+.MessageInput-module__fileIcon__ZGNCP {
+	font-size: 20px;
+	color: #666;
+}
+
+.MessageInput-module__previewInfo__KuYfi {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.MessageInput-module__fileName__XO0WG {
+	font-size: 13px;
+	font-weight: 500;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.MessageInput-module__fileType__Ywy0f {
+	font-size: 11px;
+	color: #888;
+}
+
+.MessageInput-module__removeButton__iMw71 {
+	position: absolute;
+	top: 4px;
+	left: 4px;
+	background: transparent;
+	border: none;
+	color: #999;
+	font-size: 16px;
+	cursor: pointer;
+	line-height: 1;
+}
+
+.MessageInput-module__removeButton__iMw71:hover {
+	color: #e00;
+}
+
+.MessageInput-module__uploadTrigger__HKie4 {
+	border-radius: 36px;
+	height: 36px;
+	width: 36px;
+	line-height: 36px;
+	text-align: center;
+	font-size: 22px;
+	-webkit-appearance: none;
+	   -moz-appearance: none;
+	        appearance: none;
+	box-shadow: none;
+	background: #f1f1f1;
+	outline: none;
+	border: none;
+	display: block;
+	border: 1px solid #d4d3d3;
+	position: absolute;
+	bottom: 12px;
+	right: 16px;
+	cursor: pointer;
+
+	&:hover {
+		background: #d4d3d3;
+	}
+}
+
 /*!********************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./assets/js/styles/ChatWindow.module.css ***!
   \********************************************************************************************************************************************************************************************/

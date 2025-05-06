@@ -3,12 +3,15 @@ import SessionContext from "../contexts/SessionContext";
 import { apiFetch } from "../api/apiClient";
 import styles from "../styles/MessageInput.module.css";
 import { __ } from "@wordpress/i18n";
+import axios from "axios";
 
 const MessageInput = ({ caseId, refreshMessages, refreshCases }) => {
 	const [message, setMessage] = useState("");
 	const [sending, setSending] = useState(false);
+	const [pendingFiles, setPendingFiles] = useState([]);
 	const { session } = useContext(SessionContext);
 	const textareaRef = useRef(null);
+	const fileInputRef = useRef(null);
 
 	useEffect(() => {
 		textareaRef.current?.focus();
@@ -24,19 +27,38 @@ const MessageInput = ({ caseId, refreshMessages, refreshCases }) => {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		if (!message.trim()) return;
+		if (!message.trim() && pendingFiles.length === 0) return;
 
 		setSending(true);
 		try {
-			await apiFetch(`/support-cases/${caseId}/messages`, "POST", {
-				message,
-				token: session.token,
-				email: session.email,
-				first_name: session.firstName,
-				website: ""
-			});
+			// Send message first
+			if (message.trim()) {
+				await apiFetch(`/support-cases/${caseId}/messages`, "POST", {
+					message,
+					token: session.token,
+					email: session.email,
+					first_name: session.firstName,
+					website: ""
+				});
+			}
+
+			// Upload files after message
+			for (const file of pendingFiles) {
+				const formData = new FormData();
+				formData.append("file", file);
+				formData.append("token", session.token || "");
+				formData.append("email", session.email || "");
+				formData.append("first_name", session.firstName || "");
+
+				await axios.post(`/wp-json/hrsc/v1/support-cases/${caseId}/upload`, formData, {
+					headers: {
+						"X-WP-Nonce": window.hrscChatVars?.nonce
+					}
+				});
+			}
 
 			setMessage("");
+			setPendingFiles([]);
 			await refreshMessages(caseId, session);
 			await refreshCases();
 			textareaRef.current?.focus();
@@ -60,8 +82,47 @@ const MessageInput = ({ caseId, refreshMessages, refreshCases }) => {
 		handleResize();
 	};
 
+	const handleFileSelect = (e) => {
+		if (e.target.files?.length > 0) {
+			setPendingFiles((prev) => [...prev, ...Array.from(e.target.files)]);
+			e.target.value = "";
+		}
+	};
+
+	const handleFileRemove = (index) => {
+		setPendingFiles((prev) => prev.filter((_, i) => i !== index));
+	};
+
 	return (
 		<form onSubmit={handleSubmit} className={styles.form}>
+			{pendingFiles.length > 0 && (
+				<div className={styles.previewWrapper}>
+					{pendingFiles.map((file, index) => (
+						<div key={index} className={styles.filePreview}>
+							<div className={styles.previewThumb}>
+								{file.type.startsWith("image/") ? (
+									<img src={URL.createObjectURL(file)} alt={file.name} />
+								) : (
+									<div className={styles.fileIcon}>📄</div>
+								)}
+							</div>
+							<div className={styles.previewInfo}>
+								<span className={styles.fileName}>{file.name}</span>
+								<span className={styles.fileType}>{file.type || __("Unknown", "hr-support-chat")}</span>
+							</div>
+							<button
+								type="button"
+								onClick={() => handleFileRemove(index)}
+								className={styles.removeButton}
+								aria-label={__("Remove file", "hr-support-chat")}
+							>
+								×
+							</button>
+						</div>
+					))}
+				</div>
+			)}
+
 			<div className={styles.inputWrapper}>
 				<textarea
 					ref={textareaRef}
@@ -72,9 +133,21 @@ const MessageInput = ({ caseId, refreshMessages, refreshCases }) => {
 					className={styles.textarea}
 					rows={1}
 				/>
+
+				<input type="file" ref={fileInputRef} style={{ display: "none" }} multiple onChange={handleFileSelect} />
+
+				<button
+					type="button"
+					className={styles.uploadTrigger}
+					onClick={() => fileInputRef.current?.click()}
+					aria-label={__("Upload files", "hr-support-chat")}
+				>
+					+
+				</button>
+
 				<button
 					type="submit"
-					disabled={sending || !message.trim()}
+					disabled={sending || (!message.trim() && pendingFiles.length === 0)}
 					aria-label={__("Send message", "hr-support-chat")}
 					className={styles.sendButton}
 				>
