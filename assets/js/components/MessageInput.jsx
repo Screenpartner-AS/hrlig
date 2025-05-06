@@ -5,10 +5,9 @@ import styles from "../styles/MessageInput.module.css";
 import { __ } from "@wordpress/i18n";
 import axios from "axios";
 
-const MessageInput = ({ caseId, refreshMessages, refreshCases }) => {
+const MessageInput = ({ caseId, refreshMessages, refreshCases, pendingFiles, setPendingFiles }) => {
 	const [message, setMessage] = useState("");
 	const [sending, setSending] = useState(false);
-	const [pendingFiles, setPendingFiles] = useState([]);
 	const { session } = useContext(SessionContext);
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
@@ -31,7 +30,6 @@ const MessageInput = ({ caseId, refreshMessages, refreshCases }) => {
 
 		setSending(true);
 		try {
-			// Send message first
 			if (message.trim()) {
 				await apiFetch(`/support-cases/${caseId}/messages`, "POST", {
 					message,
@@ -42,7 +40,6 @@ const MessageInput = ({ caseId, refreshMessages, refreshCases }) => {
 				});
 			}
 
-			// Upload files after message
 			for (const file of pendingFiles) {
 				const formData = new FormData();
 				formData.append("file", file);

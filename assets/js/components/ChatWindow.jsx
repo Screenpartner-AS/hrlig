@@ -88,32 +88,7 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 		};
 	}, []);
 
-	const handleFiles = async (files) => {
-		const fileArray = Array.from(files);
-		for (const file of fileArray) {
-			const formData = new FormData();
-			formData.append("file", file);
-			formData.append("token", session.token || "");
-			formData.append("email", session.email || "");
-			formData.append("first_name", session.firstName || "");
-
-			try {
-				const response = await axios.post(`/wp-json/hrsc/v1/support-cases/${caseId}/upload`, formData, {
-					headers: {
-						"X-WP-Nonce": window.hrscChatVars?.nonce
-					}
-				});
-				if (response.data.success) {
-					const res = await fetch(`/wp-json/hrsc/v1/support-cases/${caseId}/attachments`);
-					const data = await res.json();
-					setAttachments(data);
-				}
-			} catch (error) {
-				console.error("❌ Upload error", error);
-			}
-		}
-	};
-
+	// Drop handling
 	const handleDrop = (e) => {
 		e.preventDefault();
 		setDragActive(false);
@@ -201,7 +176,7 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 					ref={fileInputRef}
 					style={{ display: "none" }}
 					multiple
-					onChange={(e) => handleFiles(e.target.files)}
+					onChange={(e) => setPendingFiles((prev) => [...prev, ...Array.from(e.target.files)])}
 				/>
 				<div className={styles.inputWrapper}>
 					<MessageInput
