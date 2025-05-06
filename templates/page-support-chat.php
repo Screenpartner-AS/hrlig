@@ -8,10 +8,6 @@
 
 defined('ABSPATH') || exit;
 
-get_header();
-?>
-
-<div id="hr-support-chat-app" class="min-h-screen"></div>
-
-<?php
-get_footer();
+get_header(); ?>
+<div id="hr-support-chat-app"></div>
+<?php get_footer();

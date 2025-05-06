@@ -47,7 +47,8 @@ body {
 
 /* Hide WordPress header and footer */
 #header,
-#footer {
+#footer,
+#page hr {
 	display: none;
 }
 
