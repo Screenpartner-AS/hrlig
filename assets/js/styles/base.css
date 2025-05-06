@@ -46,6 +46,20 @@ body {
 	display: none;
 }
 
+.hidden-mobile {
+	display: none !important;
+	@media (min-width: 769px) {
+		display: initial !important;
+	}
+}
+
+.visible-mobile {
+	display: initial !important;
+	@media (min-width: 769px) {
+		display: none !important;
+	}
+}
+
 /* Hide WordPress header and footer */
 #header,
 #footer,

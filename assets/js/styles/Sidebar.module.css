@@ -3,12 +3,35 @@
 	background-color: var(--color-gray);
 	padding: 1.4rem;
 	overflow-y: auto;
+	transition: transform 0.3s ease-in-out;
+	@media (max-width: 768px) {
+		position: fixed;
+		top: 0;
+		left: 0;
+		height: 100vh;
+		z-index: 100;
+		transform: translateX(-100%);
+		box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+	}
+	&.sidebarOpen {
+		@media (max-width: 768px) {
+			transform: translateX(0);
+		}
+	}
+}
+
+.header {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-items: flex-start;
+	gap: 16px;
+	margin-bottom: 1rem;
 }
 
 .heading {
-	font-size: 1.25rem;
 	font-weight: 600;
-	margin-bottom: 1rem;
+	font-size: 1rem;
 }
 
 .loading {
@@ -19,6 +42,22 @@
 .error {
 	color: #b91c1c;
 	font-size: 0.875rem;
+}
+
+.sidebarToggle {
+	display: none;
+
+	@media (max-width: 768px) {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: #fff;
+		border: none;
+		font-size: 1.5rem;
+		cursor: pointer;
+		width: 40px;
+		height: 40px;
+	}
 }
 
 .caseList {

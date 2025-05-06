@@ -22,6 +22,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	const [showAttachments, setShowAttachments] = useState(false);
 	const [showInfo, setShowInfo] = useState(false);
 	const [supportCase, setSupportCase] = useState(null);
+	const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
 
 	const dropRef = useRef(null);
 
@@ -58,6 +59,15 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 		if (!caseId) return;
 		fetchSupportCase(caseId);
 	}, [caseId]);
+
+	useEffect(() => {
+		const handleResize = () => {
+			if (window.innerWidth > 768) setSidebarOpen(true);
+			else setSidebarOpen(false);
+		};
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
+	}, []);
 
 	const handleSelectCase = (id) => {
 		setCaseId(id);
@@ -127,6 +137,8 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 
 	const canEditTitle = session?.isHR || session?.isAdmin;
 
+	const handleToggleSidebar = () => setSidebarOpen((open) => !open);
+
 	if (!session) return null;
 
 	return (
@@ -138,6 +150,8 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 				refreshCases={refreshCases}
 				error={error}
 				loading={loading}
+				sidebarOpen={sidebarOpen}
+				onCloseSidebar={() => setSidebarOpen(false)}
 			/>
 
 			<div
@@ -175,6 +189,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 							console.error("❌ Title update failed:", err);
 						}
 					}}
+					onToggleSidebar={handleToggleSidebar}
 				/>
 
 				{showAttachments && (

@@ -2,6 +2,9 @@
 	display: flex;
 	height: 100vh;
 	overflow: hidden;
+	@media (max-width: 768px) {
+		flex-direction: column;
+	}
 }
 
 .main {
@@ -13,6 +16,9 @@
 	height: 100vh;
 	overflow: hidden;
 	width: calc(100% - 260px);
+	@media (max-width: 768px) {
+		width: 100%;
+	}
 }
 
 .dropdown {

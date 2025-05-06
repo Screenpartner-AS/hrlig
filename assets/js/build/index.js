@@ -137,6 +137,7 @@ const Chat = ({
   const [showAttachments, setShowAttachments] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [showInfo, setShowInfo] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [supportCase, setSupportCase] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+  const [sidebarOpen, setSidebarOpen] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(window.innerWidth > 768);
   const dropRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const {
     session,
@@ -179,6 +180,13 @@ const Chat = ({
     if (!caseId) return;
     fetchSupportCase(caseId);
   }, [caseId]);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) setSidebarOpen(true);else setSidebarOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const handleSelectCase = id => {
     setCaseId(id);
     onSelectCase?.(id);
@@ -237,6 +245,7 @@ const Chat = ({
     await refreshCases();
   };
   const canEditTitle = session?.isHR || session?.isAdmin;
+  const handleToggleSidebar = () => setSidebarOpen(open => !open);
   if (!session) return null;
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].container
@@ -246,7 +255,9 @@ const Chat = ({
     cases: cases,
     refreshCases: refreshCases,
     error: error,
-    loading: loading
+    loading: loading,
+    sidebarOpen: sidebarOpen,
+    onCloseSidebar: () => setSidebarOpen(false)
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].main,
     ref: dropRef,
@@ -281,7 +292,8 @@ const Chat = ({
       } catch (err) {
         console.error("❌ Title update failed:", err);
       }
-    }
+    },
+    onToggleSidebar: handleToggleSidebar
   }), showAttachments && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdown
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatAttachments__WEBPACK_IMPORTED_MODULE_4__["default"], {
@@ -388,7 +400,8 @@ const ChatHeader = ({
   onToggleInfo,
   onToggleAttachments,
   showAttachments,
-  uploading
+  uploading,
+  onToggleSidebar
 }) => {
   const [editing, setEditing] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [tempTitle, setTempTitle] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("");
@@ -416,7 +429,22 @@ const ChatHeader = ({
   };
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].header
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    onClick: onToggleSidebar,
+    className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].sidebarToggle,
+    "aria-label": (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Toggle sidebar", "hr-support-chat")
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("svg", {
+    width: "24",
+    height: "24",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    xmlns: "http://www.w3.org/2000/svg"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
+    fillRule: "evenodd",
+    clipRule: "evenodd",
+    d: "M3 8C3 7.44772 3.44772 7 4 7H20C20.5523 7 21 7.44772 21 8C21 8.55228 20.5523 9 20 9H4C3.44772 9 3 8.55228 3 8ZM3 16C3 15.4477 3.44772 15 4 15H14C14.5523 15 15 15.4477 15 16C15 16.5523 14.5523 17 14 17H4C3.44772 17 3 16.5523 3 16Z",
+    fill: "currentColor"
+  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].title
   }, editing ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     type: "text",
@@ -1125,7 +1153,9 @@ const Sidebar = ({
   cases,
   refreshCases,
   loading,
-  error
+  error,
+  sidebarOpen = false,
+  onCloseSidebar
 }) => {
   const [filter, setFilter] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("All");
   const scrollContainerRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
@@ -1149,11 +1179,28 @@ const Sidebar = ({
     }
   }, [filteredCases, selectedCaseId]);
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("aside", {
-    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].sidebar,
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].sidebar + (sidebarOpen ? " " + _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].sidebarOpen : ""),
     ref: scrollContainerRef
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].header
+  }, typeof onCloseSidebar === "function" && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    onClick: onCloseSidebar,
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].sidebarToggle + " visible-mobile",
+    "aria-label": "Close sidebar"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("svg", {
+    width: "24",
+    height: "24",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    xmlns: "http://www.w3.org/2000/svg"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
+    fillRule: "evenodd",
+    clipRule: "evenodd",
+    d: "M3 8C3 7.44772 3.44772 7 4 7H20C20.5523 7 21 7.44772 21 8C21 8.55228 20.5523 9 20 9H4C3.44772 9 3 8.55228 3 8ZM3 16C3 15.4477 3.44772 15 4 15H14C14.5523 15 15 15.4477 15 16C15 16.5523 14.5523 17 14 17H4C3.44772 17 3 16.5523 3 16Z",
+    fill: "currentColor"
+  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].heading
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Support Cases", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Support Cases", "hr-support-chat"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].filterWrapper
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("select", {
     id: "statusFilter",
@@ -1523,7 +1570,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 // extracted by mini-css-extract-plugin
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"header":"ChatHeader-module__header__wGwua","title":"ChatHeader-module__title__gOMPk","titleInput":"ChatHeader-module__titleInput__hqQzK","editButton":"ChatHeader-module__editButton__jfEWu","titleDisplay":"ChatHeader-module__titleDisplay__BtQ7R","titleText":"ChatHeader-module__titleText__MATJm","actions":"ChatHeader-module__actions___SiF3","iconButton":"ChatHeader-module__iconButton__oqsIe","active":"ChatHeader-module__active__ZB1r_","badge":"ChatHeader-module__badge__t2lic","pulse":"ChatHeader-module__pulse__r_COJ"});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"header":"ChatHeader-module__header__wGwua","sidebarToggle":"ChatHeader-module__sidebarToggle__E0B52","title":"ChatHeader-module__title__gOMPk","titleInput":"ChatHeader-module__titleInput__hqQzK","editButton":"ChatHeader-module__editButton__jfEWu","titleDisplay":"ChatHeader-module__titleDisplay__BtQ7R","titleText":"ChatHeader-module__titleText__MATJm","actions":"ChatHeader-module__actions___SiF3","iconButton":"ChatHeader-module__iconButton__oqsIe","active":"ChatHeader-module__active__ZB1r_","badge":"ChatHeader-module__badge__t2lic","pulse":"ChatHeader-module__pulse__r_COJ"});
 
 /***/ }),
 
@@ -1583,7 +1630,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 // extracted by mini-css-extract-plugin
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"sidebar":"Sidebar-module__sidebar__eyeRU","heading":"Sidebar-module__heading__JmCn3","loading":"Sidebar-module__loading__n_qzF","error":"Sidebar-module__error__Al9Ym","caseList":"Sidebar-module__caseList__bO43P","caseItem":"Sidebar-module__caseItem__VmHJT","caseTitle":"Sidebar-module__caseTitle__dvjmp","caseStatus":"Sidebar-module__caseStatus__CF0ig","active":"Sidebar-module__active__fs957","filterSelect":"Sidebar-module__filterSelect__Qp1_p","statusDot":"Sidebar-module__statusDot__em3RT","statusNew":"Sidebar-module__statusNew___C2Eq","statusOngoing":"Sidebar-module__statusOngoing__nxfLi","statusClosed":"Sidebar-module__statusClosed__NpbEM"});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"sidebar":"Sidebar-module__sidebar__eyeRU","sidebarOpen":"Sidebar-module__sidebarOpen__jlzd8","header":"Sidebar-module__header__uz6R0","heading":"Sidebar-module__heading__JmCn3","loading":"Sidebar-module__loading__n_qzF","error":"Sidebar-module__error__Al9Ym","sidebarToggle":"Sidebar-module__sidebarToggle__Adyp4","caseList":"Sidebar-module__caseList__bO43P","caseItem":"Sidebar-module__caseItem__VmHJT","caseTitle":"Sidebar-module__caseTitle__dvjmp","caseStatus":"Sidebar-module__caseStatus__CF0ig","active":"Sidebar-module__active__fs957","filterSelect":"Sidebar-module__filterSelect__Qp1_p","statusDot":"Sidebar-module__statusDot__em3RT","statusNew":"Sidebar-module__statusNew___C2Eq","statusOngoing":"Sidebar-module__statusOngoing__nxfLi","statusClosed":"Sidebar-module__statusClosed__NpbEM"});
 
 /***/ }),
 

@@ -2,7 +2,16 @@ import React, { useContext, useState, useMemo, useRef, useLayoutEffect } from "r
 import styles from "../styles/Sidebar.module.css";
 import { __ } from "@wordpress/i18n";
 
-const Sidebar = ({ selectedCaseId, onSelectCase, cases, refreshCases, loading, error }) => {
+const Sidebar = ({
+	selectedCaseId,
+	onSelectCase,
+	cases,
+	refreshCases,
+	loading,
+	error,
+	sidebarOpen = false,
+	onCloseSidebar
+}) => {
 	const [filter, setFilter] = useState("All");
 	const scrollContainerRef = useRef(null);
 	const activeCaseRef = useRef(null);
@@ -29,8 +38,27 @@ const Sidebar = ({ selectedCaseId, onSelectCase, cases, refreshCases, loading, e
 	}, [filteredCases, selectedCaseId]);
 
 	return (
-		<aside className={styles.sidebar} ref={scrollContainerRef}>
-			<h2 className={styles.heading}>{__("Support Cases", "hr-support-chat")}</h2>
+		<aside className={styles.sidebar + (sidebarOpen ? " " + styles.sidebarOpen : "")} ref={scrollContainerRef}>
+			<div className={styles.header}>
+				{/* Mobile close button */}
+				{typeof onCloseSidebar === "function" && (
+					<button
+						onClick={onCloseSidebar}
+						className={styles.sidebarToggle + " visible-mobile"}
+						aria-label="Close sidebar"
+					>
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path
+								fillRule="evenodd"
+								clipRule="evenodd"
+								d="M3 8C3 7.44772 3.44772 7 4 7H20C20.5523 7 21 7.44772 21 8C21 8.55228 20.5523 9 20 9H4C3.44772 9 3 8.55228 3 8ZM3 16C3 15.4477 3.44772 15 4 15H14C14.5523 15 15 15.4477 15 16C15 16.5523 14.5523 17 14 17H4C3.44772 17 3 16.5523 3 16Z"
+								fill="currentColor"
+							></path>
+						</svg>
+					</button>
+				)}
+				<h2 className={styles.heading}>{__("Support Cases", "hr-support-chat")}</h2>
+			</div>
 
 			<div className={styles.filterWrapper}>
 				<select
