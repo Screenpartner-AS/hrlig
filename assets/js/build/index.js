@@ -1531,7 +1531,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 // extracted by mini-css-extract-plugin
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"sidebar":"Sidebar-module__sidebar__eyeRU","heading":"Sidebar-module__heading__JmCn3","loading":"Sidebar-module__loading__n_qzF","error":"Sidebar-module__error__Al9Ym","caseList":"Sidebar-module__caseList__bO43P","caseItem":"Sidebar-module__caseItem__VmHJT","active":"Sidebar-module__active__fs957","caseTitle":"Sidebar-module__caseTitle__dvjmp","caseStatus":"Sidebar-module__caseStatus__CF0ig","filterSelect":"Sidebar-module__filterSelect__Qp1_p","statusDot":"Sidebar-module__statusDot__em3RT","statusNew":"Sidebar-module__statusNew___C2Eq","statusOngoing":"Sidebar-module__statusOngoing__nxfLi","statusClosed":"Sidebar-module__statusClosed__NpbEM"});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"sidebar":"Sidebar-module__sidebar__eyeRU","heading":"Sidebar-module__heading__JmCn3","loading":"Sidebar-module__loading__n_qzF","error":"Sidebar-module__error__Al9Ym","caseList":"Sidebar-module__caseList__bO43P","caseItem":"Sidebar-module__caseItem__VmHJT","caseTitle":"Sidebar-module__caseTitle__dvjmp","caseStatus":"Sidebar-module__caseStatus__CF0ig","active":"Sidebar-module__active__fs957","filterSelect":"Sidebar-module__filterSelect__Qp1_p","statusDot":"Sidebar-module__statusDot__em3RT","statusNew":"Sidebar-module__statusNew___C2Eq","statusOngoing":"Sidebar-module__statusOngoing__nxfLi","statusClosed":"Sidebar-module__statusClosed__NpbEM"});
 
 /***/ }),
 
