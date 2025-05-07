@@ -50,13 +50,15 @@ add_action('wp_enqueue_scripts', function () {
             true
         );
 
-        $current_user = wp_get_current_user();
-
-        // Add REST URL + nonce
-        wp_localize_script('hrsc-chat-app', 'hrscChatVars', [
+        $localize_attributes = array(
             'restUrl' => esc_url_raw(rest_url('hrsc/v1')),
-            'nonce' => wp_create_nonce('wp_rest')
-        ]);
+        );
+
+        if (is_user_logged_in()) {
+            $localize_attributes['nonce'] = wp_create_nonce('wp_rest');
+        }
+
+        wp_localize_script('hrsc-chat-app', 'hrscChatVars', $localize_attributes);
 
         // Add this:
         wp_set_script_translations('hrsc-chat-app', 'hr-support-chat', plugin_dir_path(__FILE__) . 'languages');
