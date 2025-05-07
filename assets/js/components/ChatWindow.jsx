@@ -15,6 +15,7 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 	const [statusMessage, setStatusMessage] = useState(null);
 	const [dragActive, setDragActive] = useState(false);
 	const [pendingFiles, setPendingFiles] = useState([]);
+	const [pendingUploads, setPendingUploads] = useState([]);
 
 	const refreshAndMarkReady = async () => {
 		await refreshMessages(caseId, session);
@@ -127,6 +128,32 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 		};
 	}, []);
 
+	// Remove pending upload when a new message with a matching filename appears
+	useEffect(() => {
+		if (!pendingUploads.length || !messages.length) return;
+		setPendingUploads((prev) =>
+			prev.filter((pu) => {
+				messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+				// If any message contains the filename, remove the pending upload
+				return !messages.some((msg) => msg.content && pu.file && msg.content.includes(pu.file.name));
+			})
+		);
+	}, [messages]);
+
+	// After first chat load, scroll to bottom
+	useEffect(() => {
+		if (firstLoadDone && messagesEndRef.current) {
+			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+		}
+	}, [firstLoadDone]);
+
+	// When pendingUploads changes (file added), scroll to bottom
+	useEffect(() => {
+		if (pendingUploads.length && messagesEndRef.current) {
+			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+		}
+	}, [pendingUploads]);
+
 	if (!caseId) {
 		return <div className={styles.placeholder}>{__("Select a case to view messages", "hr-support-chat")}</div>;
 	}
@@ -165,6 +192,25 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 							</div>
 						);
 					})}
+					{/* Render pending upload placeholders at the end */}
+					{pendingUploads.map((pu, idx) => (
+						<div key={pu.id || idx} className={styles.messageRow}>
+							<div className={styles.bubble + " " + styles.userBubble}>
+								<div style={{ opacity: 0.6 }}>
+									<div>📎 {__("Uploading file...", "hr-support-chat")}</div>
+									{pu.file && pu.file.type.startsWith("image/") ? (
+										<img
+											src={URL.createObjectURL(pu.file)}
+											alt={pu.file.name}
+											style={{ maxWidth: 200, borderRadius: 8, marginTop: 8 }}
+										/>
+									) : (
+										<div>{pu.file?.name}</div>
+									)}
+								</div>
+							</div>
+						</div>
+					))}
 					<div ref={messagesEndRef} />
 				</div>
 			</div>
@@ -185,6 +231,9 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 						refreshCases={refreshCases}
 						pendingFiles={pendingFiles}
 						setPendingFiles={setPendingFiles}
+						pendingUploads={pendingUploads}
+						setPendingUploads={setPendingUploads}
+						messagesEndRef={messagesEndRef}
 					/>
 				</div>
 			</div>

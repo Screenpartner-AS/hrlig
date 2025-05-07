@@ -201,10 +201,8 @@ const Chat = ({
   const handleDrop = e => {
     e.preventDefault();
     setDragActive(false);
-    if (e.dataTransfer.files?.length > 0) {
-      handleFiles(e.dataTransfer.files);
-      e.dataTransfer.clearData();
-    }
+    // Let MessageInput handle file uploads via its own input
+    // Optionally, you could set a state to pass files to MessageInput if you want drag-and-drop
   };
   const handleDragEnter = e => {
     e.preventDefault();
@@ -214,35 +212,6 @@ const Chat = ({
     if (e.relatedTarget === null || !dropRef.current.contains(e.relatedTarget)) {
       setDragActive(false);
     }
-  };
-  const handleFiles = async files => {
-    if (!session || !caseId) return;
-    const fileArray = Array.from(files);
-    setUploading(true);
-    for (const file of fileArray) {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("token", session.token || "");
-      formData.append("email", session.email || "");
-      formData.append("first_name", session.firstName || "");
-      try {
-        const response = await axios__WEBPACK_IMPORTED_MODULE_10__["default"].post(`/wp-json/hrsc/v1/support-cases/${caseId}/upload`, formData, {
-          headers: {
-            "X-WP-Nonce": window.hrscChatVars?.nonce
-          }
-        });
-        if (response.data.success) {
-          const res = await fetch(`/wp-json/hrsc/v1/support-cases/${caseId}/attachments`);
-          const data = await res.json();
-          setAttachments(data);
-        }
-      } catch (error) {
-        console.error("Upload failed:", error);
-      }
-    }
-    setUploading(false);
-    await refreshMessages(caseId, session);
-    await refreshCases();
   };
   const canEditTitle = session?.isHR || session?.isAdmin;
   const handleToggleSidebar = () => setSidebarOpen(open => !open);
@@ -595,6 +564,7 @@ const ChatWindow = ({
   const [statusMessage, setStatusMessage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const [dragActive, setDragActive] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [pendingFiles, setPendingFiles] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
+  const [pendingUploads, setPendingUploads] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   const refreshAndMarkReady = async () => {
     await refreshMessages(caseId, session);
     if (!firstLoadDone) setFirstLoadDone(true);
@@ -691,6 +661,36 @@ const ChatWindow = ({
       area.removeEventListener("dragleave", handleDragLeave);
     };
   }, []);
+
+  // Remove pending upload when a new message with a matching filename appears
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    if (!pendingUploads.length || !messages.length) return;
+    setPendingUploads(prev => prev.filter(pu => {
+      messagesEndRef.current.scrollIntoView({
+        behavior: "smooth"
+      });
+      // If any message contains the filename, remove the pending upload
+      return !messages.some(msg => msg.content && pu.file && msg.content.includes(pu.file.name));
+    }));
+  }, [messages]);
+
+  // After first chat load, scroll to bottom
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    if (firstLoadDone && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: "smooth"
+      });
+    }
+  }, [firstLoadDone]);
+
+  // When pendingUploads changes (file added), scroll to bottom
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    if (pendingUploads.length && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: "smooth"
+      });
+    }
+  }, [pendingUploads]);
   if (!caseId) {
     return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
       className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].placeholder
@@ -733,7 +733,24 @@ const ChatWindow = ({
         __html: msg.content
       }
     }));
-  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }), pendingUploads.map((pu, idx) => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    key: pu.id || idx,
+    className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].messageRow
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].bubble + " " + _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].userBubble
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    style: {
+      opacity: 0.6
+    }
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, "\uD83D\uDCCE ", (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)("Uploading file...", "hr-support-chat")), pu.file && pu.file.type.startsWith("image/") ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("img", {
+    src: URL.createObjectURL(pu.file),
+    alt: pu.file.name,
+    style: {
+      maxWidth: 200,
+      borderRadius: 8,
+      marginTop: 8
+    }
+  }) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, pu.file?.name))))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     ref: messagesEndRef
   }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].inputBar
@@ -752,7 +769,10 @@ const ChatWindow = ({
     refreshMessages: refreshMessages,
     refreshCases: refreshCases,
     pendingFiles: pendingFiles,
-    setPendingFiles: setPendingFiles
+    setPendingFiles: setPendingFiles,
+    pendingUploads: pendingUploads,
+    setPendingUploads: setPendingUploads,
+    messagesEndRef: messagesEndRef
   }))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ChatWindow);
@@ -789,7 +809,9 @@ const MessageInput = ({
   refreshMessages,
   refreshCases,
   pendingFiles,
-  setPendingFiles
+  setPendingFiles,
+  pendingUploads,
+  setPendingUploads
 }) => {
   const [message, setMessage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("");
   const [sending, setSending] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
@@ -811,6 +833,7 @@ const MessageInput = ({
   const handleSubmit = async e => {
     e.preventDefault();
     if (!message.trim() && pendingFiles.length === 0) return;
+    if (sending) return;
     setSending(true);
     try {
       if (message.trim()) {
@@ -822,7 +845,19 @@ const MessageInput = ({
           website: ""
         });
       }
-      for (const file of pendingFiles) {
+      const filesToUpload = [...pendingFiles];
+      filesToUpload.forEach(file => {
+        setPendingUploads(prev => [...prev, {
+          id: `${file.name}-${Date.now()}-${Math.random()}`,
+          file
+        }]);
+      });
+      setPendingFiles([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      await new Promise(r => setTimeout(r, 0));
+      for (const file of filesToUpload) {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("token", session.token || "");
@@ -835,9 +870,7 @@ const MessageInput = ({
         });
       }
       setMessage("");
-      setPendingFiles([]);
-      await refreshMessages(caseId, session);
-      await refreshCases();
+      await Promise.all([refreshMessages(caseId, session), refreshCases()]);
       textareaRef.current?.focus();
       handleResize();
     } catch (err) {
@@ -849,7 +882,9 @@ const MessageInput = ({
   const handleKeyDown = e => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e);
+      if (!sending) {
+        handleSubmit(e);
+      }
     }
   };
   const handleChange = e => {

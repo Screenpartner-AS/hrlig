@@ -5,7 +5,15 @@ import styles from "../styles/MessageInput.module.css";
 import { __ } from "@wordpress/i18n";
 import axios from "axios";
 
-const MessageInput = ({ caseId, refreshMessages, refreshCases, pendingFiles, setPendingFiles }) => {
+const MessageInput = ({
+	caseId,
+	refreshMessages,
+	refreshCases,
+	pendingFiles,
+	setPendingFiles,
+	pendingUploads,
+	setPendingUploads
+}) => {
 	const [message, setMessage] = useState("");
 	const [sending, setSending] = useState(false);
 	const { session } = useContext(SessionContext);
@@ -27,6 +35,7 @@ const MessageInput = ({ caseId, refreshMessages, refreshCases, pendingFiles, set
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		if (!message.trim() && pendingFiles.length === 0) return;
+		if (sending) return;
 
 		setSending(true);
 		try {
@@ -40,7 +49,18 @@ const MessageInput = ({ caseId, refreshMessages, refreshCases, pendingFiles, set
 				});
 			}
 
-			for (const file of pendingFiles) {
+			const filesToUpload = [...pendingFiles];
+			filesToUpload.forEach((file) => {
+				setPendingUploads((prev) => [...prev, { id: `${file.name}-${Date.now()}-${Math.random()}`, file }]);
+			});
+			setPendingFiles([]);
+			if (fileInputRef.current) {
+				fileInputRef.current.value = "";
+			}
+
+			await new Promise((r) => setTimeout(r, 0));
+
+			for (const file of filesToUpload) {
 				const formData = new FormData();
 				formData.append("file", file);
 				formData.append("token", session.token || "");
@@ -55,9 +75,7 @@ const MessageInput = ({ caseId, refreshMessages, refreshCases, pendingFiles, set
 			}
 
 			setMessage("");
-			setPendingFiles([]);
-			await refreshMessages(caseId, session);
-			await refreshCases();
+			await Promise.all([refreshMessages(caseId, session), refreshCases()]);
 			textareaRef.current?.focus();
 			handleResize();
 		} catch (err) {
@@ -70,7 +88,9 @@ const MessageInput = ({ caseId, refreshMessages, refreshCases, pendingFiles, set
 	const handleKeyDown = (e) => {
 		if (e.key === "Enter" && !e.shiftKey) {
 			e.preventDefault();
-			handleSubmit(e);
+			if (!sending) {
+				handleSubmit(e);
+			}
 		}
 	};
 

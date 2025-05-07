@@ -85,11 +85,8 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	const handleDrop = (e) => {
 		e.preventDefault();
 		setDragActive(false);
-
-		if (e.dataTransfer.files?.length > 0) {
-			handleFiles(e.dataTransfer.files);
-			e.dataTransfer.clearData();
-		}
+		// Let MessageInput handle file uploads via its own input
+		// Optionally, you could set a state to pass files to MessageInput if you want drag-and-drop
 	};
 
 	const handleDragEnter = (e) => {
@@ -101,38 +98,6 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 		if (e.relatedTarget === null || !dropRef.current.contains(e.relatedTarget)) {
 			setDragActive(false);
 		}
-	};
-
-	const handleFiles = async (files) => {
-		if (!session || !caseId) return;
-		const fileArray = Array.from(files);
-		setUploading(true);
-
-		for (const file of fileArray) {
-			const formData = new FormData();
-			formData.append("file", file);
-			formData.append("token", session.token || "");
-			formData.append("email", session.email || "");
-			formData.append("first_name", session.firstName || "");
-
-			try {
-				const response = await axios.post(`/wp-json/hrsc/v1/support-cases/${caseId}/upload`, formData, {
-					headers: { "X-WP-Nonce": window.hrscChatVars?.nonce }
-				});
-
-				if (response.data.success) {
-					const res = await fetch(`/wp-json/hrsc/v1/support-cases/${caseId}/attachments`);
-					const data = await res.json();
-					setAttachments(data);
-				}
-			} catch (error) {
-				console.error("Upload failed:", error);
-			}
-		}
-
-		setUploading(false);
-		await refreshMessages(caseId, session);
-		await refreshCases();
 	};
 
 	const canEditTitle = session?.isHR || session?.isAdmin;
