@@ -49,12 +49,12 @@ body {
 .hidden-mobile {
 	display: none !important;
 	@media (min-width: 769px) {
-		display: initial !important;
+		display: flex !important;
 	}
 }
 
 .visible-mobile {
-	display: initial !important;
+	display: flex !important;
 	@media (min-width: 769px) {
 		display: none !important;
 	}

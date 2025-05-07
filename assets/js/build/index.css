@@ -4,9 +4,10 @@
 .Sidebar-module__sidebar__eyeRU {
 	width: 260px;
 	background-color: var(--color-gray);
-	padding: 1.4rem;
+	padding: 0.5rem 1rem;
 	overflow-y: auto;
 	transition: transform 0.3s ease-in-out;
+
 	@media (max-width: 768px) {
 		position: fixed;
 		top: 0;
@@ -14,8 +15,11 @@
 		height: 100vh;
 		z-index: 100;
 		transform: translateX(-100%);
-		box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+		box-shadow: 0 0 64px 0 #00000012;
+		border-right: 1px solid var(--color-gray-dark);
+		background: #fff;
 	}
+
 	&.Sidebar-module__sidebarOpen__jlzd8 {
 		@media (max-width: 768px) {
 			transform: translateX(0);
@@ -30,6 +34,7 @@
 	justify-items: flex-start;
 	gap: 16px;
 	margin-bottom: 1rem;
+	padding: 0.5rem 0;
 }
 
 .Sidebar-module__heading__JmCn3 {
@@ -54,18 +59,19 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: #fff;
+		background: var(--color-gray);
 		border: none;
 		font-size: 1.5rem;
 		cursor: pointer;
 		width: 40px;
 		height: 40px;
+		border-radius: 6px;
 	}
 }
 
 .Sidebar-module__caseList__bO43P {
 	list-style: none;
-	padding: 0;
+	padding: 0 0.95rem;
 	margin: 0;
 	display: flex;
 	flex-direction: column;
@@ -504,6 +510,7 @@
 			cursor: pointer;
 			width: 40px;
 			height: 40px;
+			border-radius: 6px;
 
 			&:hover {
 				background: var(--color-gray);
@@ -866,12 +873,12 @@ body {
 .hidden-mobile {
 	display: none !important;
 	@media (min-width: 769px) {
-		display: initial !important;
+		display: flex !important;
 	}
 }
 
 .visible-mobile {
-	display: initial !important;
+	display: flex !important;
 	@media (min-width: 769px) {
 		display: none !important;
 	}
