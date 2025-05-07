@@ -34,8 +34,6 @@ const useSupportCases = (session, ready) => {
 				if (session.firstName) queryParams.first_name = session.firstName;
 			}
 
-			console.log("🔍 Fetching cases with params:", queryParams);
-
 			const data = await apiFetch("/support-cases", "GET", null, queryParams);
 			setCases(data);
 			setError(null);

@@ -21,11 +21,8 @@ const ChatAttachments = ({ supportCaseId, attachments, setAttachments }) => {
 
 	if (!attachments.length) return null;
 
-	console.log("Attachments:", attachments);
-
 	return (
 		<div>
-			<h4>{__("Case Files", "hr-support-chat")}</h4>
 			<div className={styles.attachment_list}>
 				{attachments.map((file) => (
 					<a

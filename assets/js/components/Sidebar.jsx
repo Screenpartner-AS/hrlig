@@ -1,5 +1,6 @@
 import React, { useContext, useState, useMemo, useRef, useLayoutEffect } from "react";
 import styles from "../styles/Sidebar.module.css";
+import UserAvatar from "./UserAvatar";
 import { __ } from "@wordpress/i18n";
 
 const Sidebar = ({
@@ -88,10 +89,12 @@ const Sidebar = ({
 								onClick={() => onSelectCase(c.id)}
 								className={`${styles.caseItem} ${isActive ? styles.active : ""}`}
 							>
-								<div className={styles.caseTitle}>{c.title}</div>
-								<div className={styles.caseStatus}>
-									<span className={`${styles.statusDot} ${styles["status" + c.status]}`} />
-									{c.status}
+								<div className={styles.caseContent}>
+									<div className={styles.caseTitle}>{c.title}</div>
+									<div className={styles.caseStatus}>
+										<span className={`${styles.statusDot} ${styles["status" + c.status]}`} />
+									</div>
+									<UserAvatar user={c.assigned_to || { name: null, avatar: null }} size={20} showName={true} />
 								</div>
 							</li>
 						);

@@ -9,6 +9,7 @@ import useSupportCases from "../hooks/useSupportCases";
 import useAuthSession from "../hooks/useAuthSession";
 import styles from "../styles/Chat.module.css";
 import axios from "axios";
+import { __ } from "@wordpress/i18n";
 
 const getQueryParam = (name) => {
 	return new URLSearchParams(window.location.search).get(name);
@@ -23,6 +24,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	const [showInfo, setShowInfo] = useState(false);
 	const [supportCase, setSupportCase] = useState(null);
 	const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+	const [dropdownOpen, setDropdownOpen] = useState(false);
 
 	const dropRef = useRef(null);
 
@@ -32,13 +34,10 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 
 	// Utility: fetch full support case by ID
 	const fetchSupportCase = async (id) => {
-		try {
-			const res = await fetch(`/wp-json/wp/v2/support_case/${id}`);
-			const data = await res.json();
-			setSupportCase(data);
-		} catch (err) {
-			console.error("Failed to fetch support case:", err);
-		}
+		// Use the cases array from useSupportCases, which already uses the custom API
+		const found = cases.find((c) => c.id === id);
+		if (found) setSupportCase(found);
+		else setSupportCase(null);
 	};
 
 	useEffect(() => {
@@ -56,9 +55,9 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	}, [caseId, cases, onSelectCase]);
 
 	useEffect(() => {
-		if (!caseId) return;
+		if (!caseId || !cases.length) return;
 		fetchSupportCase(caseId);
-	}, [caseId]);
+	}, [caseId, cases]);
 
 	useEffect(() => {
 		const handleResize = () => {
@@ -104,6 +103,20 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 
 	const handleToggleSidebar = () => setSidebarOpen((open) => !open);
 
+	const handleToggleDropdown = (type) => {
+		if (type === "attachments") {
+			setShowAttachments((prev) => !prev);
+			setShowInfo(false);
+		} else if (type === "info") {
+			setShowInfo((prev) => !prev);
+			setShowAttachments(false);
+		}
+		setDropdownOpen((prev) => !prev);
+		if (window.innerWidth <= 768) {
+			setSidebarOpen(false);
+		}
+	};
+
 	if (!session) return null;
 
 	return (
@@ -130,14 +143,8 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 				<ChatHeader
 					supportCase={supportCase}
 					canEditTitle={canEditTitle}
-					onToggleInfo={() => {
-						setShowInfo((prev) => !prev);
-						setShowAttachments(false);
-					}}
-					onToggleAttachments={() => {
-						setShowAttachments((prev) => !prev);
-						setShowInfo(false);
-					}}
+					onToggleInfo={() => handleToggleDropdown("info")}
+					onToggleAttachments={() => handleToggleDropdown("attachments")}
 					showAttachments={showAttachments}
 					uploading={uploading}
 					onTitleUpdate={async (newTitle) => {
@@ -157,17 +164,47 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 					onToggleSidebar={handleToggleSidebar}
 				/>
 
-				{showAttachments && (
-					<div className={styles.dropdown}>
-						<ChatAttachments supportCaseId={caseId} attachments={attachments} setAttachments={setAttachments} />
+				<div className={`${styles.dropdown} ${showAttachments ? styles.dropdownOpen : ""}`}>
+					<div className={styles.dropdownHeader}>
+						<h2 className={styles.dropdownTitle}>{__("Attachments", "hr-support-chat")}</h2>
+						<button
+							onClick={() => handleToggleDropdown("attachments")}
+							className={styles.dropdownToggle}
+							aria-label={__("Close attachments", "hr-support-chat")}
+						>
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path
+									fillRule="evenodd"
+									clipRule="evenodd"
+									d="M3 8C3 7.44772 3.44772 7 4 7H20C20.5523 7 21 7.44772 21 8C21 8.55228 20.5523 9 20 9H4C3.44772 9 3 8.55228 3 8ZM3 16C3 15.4477 3.44772 15 4 15H14C14.5523 15 15 15.4477 15 16C15 16.5523 14.5523 17 14 17H4C3.44772 17 3 16.5523 3 16Z"
+									fill="currentColor"
+								></path>
+							</svg>
+						</button>
 					</div>
-				)}
+					<ChatAttachments supportCaseId={caseId} attachments={attachments} setAttachments={setAttachments} />
+				</div>
 
-				{showInfo && (
-					<div className={styles.dropdown}>
-						<ChatInfo supportCase={supportCase} />
+				<div className={`${styles.dropdown} ${showInfo ? styles.dropdownOpen : ""}`}>
+					<div className={styles.dropdownHeader}>
+						<h2 className={styles.dropdownTitle}>{__("Case Information", "hr-support-chat")}</h2>
+						<button
+							onClick={() => handleToggleDropdown("info")}
+							className={styles.dropdownToggle}
+							aria-label={__("Close info", "hr-support-chat")}
+						>
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path
+									fillRule="evenodd"
+									clipRule="evenodd"
+									d="M3 8C3 7.44772 3.44772 7 4 7H20C20.5523 7 21 7.44772 21 8C21 8.55228 20.5523 9 20 9H4C3.44772 9 3 8.55228 3 8ZM3 16C3 15.4477 3.44772 15 4 15H14C14.5523 15 15 15.4477 15 16C15 16.5523 14.5523 17 14 17H4C3.44772 17 3 16.5523 3 16Z"
+									fill="currentColor"
+								></path>
+							</svg>
+						</button>
 					</div>
-				)}
+					<ChatInfo supportCase={supportCase} attachments={attachments} />
+				</div>
 
 				<ChatWindow
 					caseId={caseId}

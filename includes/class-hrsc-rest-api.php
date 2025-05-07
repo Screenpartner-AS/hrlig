@@ -186,11 +186,29 @@ class HRSC_REST_API
         $cases = [];
 
         foreach ($query->posts as $case) {
+            $assigned_hr_id = get_post_meta($case->ID, '_hrsc_assigned_hr', true);
+            $assigned_user = null;
+
+            if ($assigned_hr_id) {
+                $user = get_user_by('id', $assigned_hr_id);
+                if ($user) {
+                    $assigned_user = [
+                        'id' => $user->ID,
+                        'name' => $user->display_name,
+                        'avatar' => get_avatar_url($user->ID, ['size' => 96])
+                    ];
+                }
+            }
+
             $cases[] = [
                 'id' => $case->ID,
                 'title' => get_the_title($case),
                 'status' => get_post_meta($case->ID, '_hrsc_status', true),
                 'date' => $case->post_date,
+                'assigned_to' => $assigned_user,
+                'employee_first_name' => get_post_meta($case->ID, '_hrsc_employee_first_name', true),
+                'employee_email' => get_post_meta($case->ID, '_hrsc_employee_email', true),
+                'anonymous' => !empty(get_post_meta($case->ID, '_hrsc_token', true)),
             ];
         }
 

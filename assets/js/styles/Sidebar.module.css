@@ -68,11 +68,11 @@
 
 .caseList {
 	list-style: none;
-	padding: 0 0.95rem;
+	padding: 0 1rem;
 	margin: 0;
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 1px;
 }
 
 .caseItem {
@@ -81,8 +81,7 @@
 	transition: background-color 0.2s;
 	position: relative;
 
-	.caseTitle,
-	.caseStatus {
+	> * {
 		position: relative;
 		z-index: 1;
 	}
@@ -117,12 +116,61 @@
 .caseTitle {
 	font-weight: 500;
 	font-size: 0.9rem;
+	margin-bottom: 4px;
 }
 
 .caseStatus {
 	font-size: 0.75rem;
 	color: #6b7280;
 	opacity: 0.5;
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	right: 0;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.assignedUser {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 6px;
+}
+
+.avatar {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	overflow: hidden;
+	background-color: var(--color-gray-dark);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.75rem;
+	color: #fff;
+
+	img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+}
+
+.avatarPlaceholder {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: #4f54d6;
+	color: #fff;
+}
+
+.userName {
+	font-size: 0.75rem;
+	color: #6b7280;
 }
 
 .filterSelect {
@@ -137,10 +185,9 @@
 
 .statusDot {
 	display: inline-block;
-	width: 10px;
-	height: 10px;
+	width: 8px;
+	height: 8px;
 	border-radius: 50%;
-	margin-right: 6px;
 }
 
 .statusNew {

@@ -110,7 +110,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _hooks_useSupportCases__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../hooks/useSupportCases */ "./assets/js/hooks/useSupportCases.js");
 /* harmony import */ var _hooks_useAuthSession__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../hooks/useAuthSession */ "./assets/js/hooks/useAuthSession.js");
 /* harmony import */ var _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../styles/Chat.module.css */ "./assets/js/styles/Chat.module.css");
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
+/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @wordpress/i18n */ "@wordpress/i18n");
+/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(_wordpress_i18n__WEBPACK_IMPORTED_MODULE_10__);
+
 
 
 
@@ -138,6 +141,7 @@ const Chat = ({
   const [showInfo, setShowInfo] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [supportCase, setSupportCase] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const [sidebarOpen, setSidebarOpen] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(window.innerWidth > 768);
+  const [dropdownOpen, setDropdownOpen] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const dropRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
   const {
     session,
@@ -156,13 +160,9 @@ const Chat = ({
 
   // Utility: fetch full support case by ID
   const fetchSupportCase = async id => {
-    try {
-      const res = await fetch(`/wp-json/wp/v2/support_case/${id}`);
-      const data = await res.json();
-      setSupportCase(data);
-    } catch (err) {
-      console.error("Failed to fetch support case:", err);
-    }
+    // Use the cases array from useSupportCases, which already uses the custom API
+    const found = cases.find(c => c.id === id);
+    if (found) setSupportCase(found);else setSupportCase(null);
   };
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const paramId = getQueryParam("case_id");
@@ -177,9 +177,9 @@ const Chat = ({
     }
   }, [caseId, cases, onSelectCase]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    if (!caseId) return;
+    if (!caseId || !cases.length) return;
     fetchSupportCase(caseId);
-  }, [caseId]);
+  }, [caseId, cases]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const handleResize = () => {
       if (window.innerWidth > 768) setSidebarOpen(true);else setSidebarOpen(false);
@@ -215,6 +215,19 @@ const Chat = ({
   };
   const canEditTitle = session?.isHR || session?.isAdmin;
   const handleToggleSidebar = () => setSidebarOpen(open => !open);
+  const handleToggleDropdown = type => {
+    if (type === "attachments") {
+      setShowAttachments(prev => !prev);
+      setShowInfo(false);
+    } else if (type === "info") {
+      setShowInfo(prev => !prev);
+      setShowAttachments(false);
+    }
+    setDropdownOpen(prev => !prev);
+    if (window.innerWidth <= 768) {
+      setSidebarOpen(false);
+    }
+  };
   if (!session) return null;
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].container
@@ -237,19 +250,13 @@ const Chat = ({
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatHeader__WEBPACK_IMPORTED_MODULE_3__["default"], {
     supportCase: supportCase,
     canEditTitle: canEditTitle,
-    onToggleInfo: () => {
-      setShowInfo(prev => !prev);
-      setShowAttachments(false);
-    },
-    onToggleAttachments: () => {
-      setShowAttachments(prev => !prev);
-      setShowInfo(false);
-    },
+    onToggleInfo: () => handleToggleDropdown("info"),
+    onToggleAttachments: () => handleToggleDropdown("attachments"),
     showAttachments: showAttachments,
     uploading: uploading,
     onTitleUpdate: async newTitle => {
       try {
-        await axios__WEBPACK_IMPORTED_MODULE_10__["default"].post(`/wp-json/hrsc/v1/support-cases/${caseId}/title`, {
+        await axios__WEBPACK_IMPORTED_MODULE_11__["default"].post(`/wp-json/hrsc/v1/support-cases/${caseId}/title`, {
           title: newTitle
         }, {
           headers: {
@@ -263,16 +270,55 @@ const Chat = ({
       }
     },
     onToggleSidebar: handleToggleSidebar
-  }), showAttachments && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdown
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatAttachments__WEBPACK_IMPORTED_MODULE_4__["default"], {
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: `${_styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdown} ${showAttachments ? _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdownOpen : ""}`
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdownHeader
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
+    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdownTitle
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_10__.__)("Attachments", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    onClick: () => handleToggleDropdown("attachments"),
+    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdownToggle,
+    "aria-label": (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_10__.__)("Close attachments", "hr-support-chat")
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("svg", {
+    width: "24",
+    height: "24",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    xmlns: "http://www.w3.org/2000/svg"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
+    fillRule: "evenodd",
+    clipRule: "evenodd",
+    d: "M3 8C3 7.44772 3.44772 7 4 7H20C20.5523 7 21 7.44772 21 8C21 8.55228 20.5523 9 20 9H4C3.44772 9 3 8.55228 3 8ZM3 16C3 15.4477 3.44772 15 4 15H14C14.5523 15 15 15.4477 15 16C15 16.5523 14.5523 17 14 17H4C3.44772 17 3 16.5523 3 16Z",
+    fill: "currentColor"
+  })))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatAttachments__WEBPACK_IMPORTED_MODULE_4__["default"], {
     supportCaseId: caseId,
     attachments: attachments,
     setAttachments: setAttachments
-  })), showInfo && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdown
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatInfo__WEBPACK_IMPORTED_MODULE_5__["default"], {
-    supportCase: supportCase
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: `${_styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdown} ${showInfo ? _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdownOpen : ""}`
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdownHeader
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
+    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdownTitle
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_10__.__)("Case Information", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    onClick: () => handleToggleDropdown("info"),
+    className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdownToggle,
+    "aria-label": (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_10__.__)("Close info", "hr-support-chat")
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("svg", {
+    width: "24",
+    height: "24",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    xmlns: "http://www.w3.org/2000/svg"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("path", {
+    fillRule: "evenodd",
+    clipRule: "evenodd",
+    d: "M3 8C3 7.44772 3.44772 7 4 7H20C20.5523 7 21 7.44772 21 8C21 8.55228 20.5523 9 20 9H4C3.44772 9 3 8.55228 3 8ZM3 16C3 15.4477 3.44772 15 4 15H14C14.5523 15 15 15.4477 15 16C15 16.5523 14.5523 17 14 17H4C3.44772 17 3 16.5523 3 16Z",
+    fill: "currentColor"
+  })))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatInfo__WEBPACK_IMPORTED_MODULE_5__["default"], {
+    supportCase: supportCase,
+    attachments: attachments
   })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_ChatWindow__WEBPACK_IMPORTED_MODULE_2__["default"], {
     caseId: caseId,
     messages: messages,
@@ -325,8 +371,7 @@ const ChatAttachments = ({
     fetchAttachments();
   }, [supportCaseId, attachments, setAttachments]);
   if (!attachments.length) return null;
-  console.log("Attachments:", attachments);
-  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h4", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Case Files", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatAttachments_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].attachment_list
   }, attachments.map(file => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
     className: _styles_ChatAttachments_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].attachment_item,
@@ -506,16 +551,40 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @wordpress/i18n */ "@wordpress/i18n");
 /* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _UserAvatar__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./UserAvatar */ "./assets/js/components/UserAvatar.jsx");
+
 
 
 
 const ChatInfo = ({
-  supportCase
+  supportCase,
+  attachments = []
 }) => {
   if (!supportCase) {
     return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Loading case information…", "hr-support-chat"));
   }
-  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h4", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Case Info", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Case ID:", "hr-support-chat")), " ", supportCase.id), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Status:", "hr-support-chat")), " ", supportCase.status), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Created:", "hr-support-chat")), " ", new Date(supportCase.date).toLocaleString()), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Author:", "hr-support-chat")), " ", supportCase.author_name)));
+  const getStatusLabel = status => {
+    switch (status) {
+      case "New":
+      case "Ongoing":
+      case "Closed":
+        return (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)(status, "hr-support-chat");
+      default:
+        return status || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Unknown", "hr-support-chat");
+    }
+  };
+  let chatter = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Anonymous", "hr-support-chat");
+  if (supportCase.employee_first_name && supportCase.employee_email) {
+    chatter = `${supportCase.employee_first_name} (${supportCase.employee_email})`;
+  }
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Case ID:", "hr-support-chat")), " ", supportCase.id), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Status:", "hr-support-chat")), " ", getStatusLabel(supportCase.status)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Attachments:", "hr-support-chat")), " ", attachments.length), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("HR Advisor:", "hr-support-chat")), " ", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_UserAvatar__WEBPACK_IMPORTED_MODULE_2__["default"], {
+    user: supportCase.assigned_to || {
+      name: null,
+      avatar: null
+    },
+    size: 20,
+    showName: true
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Chatter:", "hr-support-chat")), " ", chatter)));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ChatInfo);
 
@@ -1176,8 +1245,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../styles/Sidebar.module.css */ "./assets/js/styles/Sidebar.module.css");
-/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @wordpress/i18n */ "@wordpress/i18n");
-/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _UserAvatar__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./UserAvatar */ "./assets/js/components/UserAvatar.jsx");
+/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @wordpress/i18n */ "@wordpress/i18n");
+/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_wordpress_i18n__WEBPACK_IMPORTED_MODULE_3__);
+
 
 
 
@@ -1235,7 +1306,7 @@ const Sidebar = ({
     fill: "currentColor"
   }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].heading
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Support Cases", "hr-support-chat"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_3__.__)("Support Cases", "hr-support-chat"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].filterWrapper
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("select", {
     id: "statusFilter",
@@ -1244,17 +1315,17 @@ const Sidebar = ({
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].filterSelect
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
     value: "All"
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("All", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_3__.__)("All", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
     value: "New"
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("New", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_3__.__)("New", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
     value: "Ongoing"
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Ongoing", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_3__.__)("Ongoing", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
     value: "Closed"
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Closed", "hr-support-chat")))), error && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_3__.__)("Closed", "hr-support-chat")))), error && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].error
   }, error), !cases.length && loading ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].loading
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Loading…", "hr-support-chat")) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", {
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_3__.__)("Loading…", "hr-support-chat")) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", {
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseList
   }, filteredCases.map(c => {
     const isActive = c.id === selectedCaseId;
@@ -1264,15 +1335,78 @@ const Sidebar = ({
       onClick: () => onSelectCase(c.id),
       className: `${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseItem} ${isActive ? _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].active : ""}`
     }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseContent
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
       className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseTitle
     }, c.title), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
       className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseStatus
     }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
       className: `${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].statusDot} ${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"]["status" + c.status]}`
-    }), c.status));
+    })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_UserAvatar__WEBPACK_IMPORTED_MODULE_2__["default"], {
+      user: c.assigned_to || {
+        name: null,
+        avatar: null
+      },
+      size: 20,
+      showName: true
+    })));
   })));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Sidebar);
+
+/***/ }),
+
+/***/ "./assets/js/components/UserAvatar.jsx":
+/*!*********************************************!*\
+  !*** ./assets/js/components/UserAvatar.jsx ***!
+  \*********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @wordpress/i18n */ "@wordpress/i18n");
+/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../styles/Sidebar.module.css */ "./assets/js/styles/Sidebar.module.css");
+
+
+
+
+const UserAvatar = ({
+  user,
+  size = 20,
+  showName = true
+}) => {
+  //if (!user) return null;
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].assignedUser,
+    style: {
+      gap: 6
+    }
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].avatar,
+    style: {
+      width: size,
+      height: size
+    }
+  }, user.avatar ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("img", {
+    src: user.avatar,
+    alt: user.name,
+    style: {
+      width: "100%",
+      height: "100%",
+      objectFit: "cover"
+    }
+  }) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].avatarPlaceholder
+  }, user.name ? user.name.charAt(0).toUpperCase() : "?")), showName && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+    className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_2__["default"].userName
+  }, user.name || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Unassigned", "hr-support-chat")));
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (UserAvatar);
 
 /***/ }),
 
@@ -1537,7 +1671,6 @@ const useSupportCases = (session, ready) => {
         if (session.email) queryParams.email = session.email;
         if (session.firstName) queryParams.first_name = session.firstName;
       }
-      console.log("🔍 Fetching cases with params:", queryParams);
       const data = await (0,_api_apiClient__WEBPACK_IMPORTED_MODULE_1__.apiFetch)("/support-cases", "GET", null, queryParams);
       setCases(data);
       setError(null);
@@ -1575,7 +1708,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 // extracted by mini-css-extract-plugin
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"container":"Chat-module__container__n_3Bx","main":"Chat-module__main__E04Xs","dropdown":"Chat-module__dropdown__o1BY9","dropdown-fade":"Chat-module__dropdown-fade__NHgez"});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"container":"Chat-module__container__n_3Bx","main":"Chat-module__main__E04Xs","dropdown":"Chat-module__dropdown__o1BY9","dropdownOpen":"Chat-module__dropdownOpen__It__E","dropdownHeader":"Chat-module__dropdownHeader__bEU8g","dropdownTitle":"Chat-module__dropdownTitle__ha6Zc","dropdownToggle":"Chat-module__dropdownToggle__lZywl"});
 
 /***/ }),
 
@@ -1665,7 +1798,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 // extracted by mini-css-extract-plugin
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"sidebar":"Sidebar-module__sidebar__eyeRU","sidebarOpen":"Sidebar-module__sidebarOpen__jlzd8","header":"Sidebar-module__header__uz6R0","heading":"Sidebar-module__heading__JmCn3","loading":"Sidebar-module__loading__n_qzF","error":"Sidebar-module__error__Al9Ym","sidebarToggle":"Sidebar-module__sidebarToggle__Adyp4","caseList":"Sidebar-module__caseList__bO43P","caseItem":"Sidebar-module__caseItem__VmHJT","caseTitle":"Sidebar-module__caseTitle__dvjmp","caseStatus":"Sidebar-module__caseStatus__CF0ig","active":"Sidebar-module__active__fs957","filterSelect":"Sidebar-module__filterSelect__Qp1_p","statusDot":"Sidebar-module__statusDot__em3RT","statusNew":"Sidebar-module__statusNew___C2Eq","statusOngoing":"Sidebar-module__statusOngoing__nxfLi","statusClosed":"Sidebar-module__statusClosed__NpbEM"});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"sidebar":"Sidebar-module__sidebar__eyeRU","sidebarOpen":"Sidebar-module__sidebarOpen__jlzd8","header":"Sidebar-module__header__uz6R0","heading":"Sidebar-module__heading__JmCn3","loading":"Sidebar-module__loading__n_qzF","error":"Sidebar-module__error__Al9Ym","sidebarToggle":"Sidebar-module__sidebarToggle__Adyp4","caseList":"Sidebar-module__caseList__bO43P","caseItem":"Sidebar-module__caseItem__VmHJT","active":"Sidebar-module__active__fs957","caseStatus":"Sidebar-module__caseStatus__CF0ig","caseTitle":"Sidebar-module__caseTitle__dvjmp","assignedUser":"Sidebar-module__assignedUser__VgmJI","avatar":"Sidebar-module__avatar__Jh5xZ","avatarPlaceholder":"Sidebar-module__avatarPlaceholder__Qq0Vu","userName":"Sidebar-module__userName__Pj2cG","filterSelect":"Sidebar-module__filterSelect__Qp1_p","statusDot":"Sidebar-module__statusDot__em3RT","statusNew":"Sidebar-module__statusNew___C2Eq","statusOngoing":"Sidebar-module__statusOngoing__nxfLi","statusClosed":"Sidebar-module__statusClosed__NpbEM"});
 
 /***/ }),
 
