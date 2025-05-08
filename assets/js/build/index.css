@@ -59,13 +59,17 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--color-gray);
+		background: transparent;
 		border: none;
 		font-size: 1.5rem;
 		cursor: pointer;
 		width: 40px;
 		height: 40px;
 		border-radius: 6px;
+
+		&:hover {
+			background: var(--color-gray);
+		}
 	}
 }
 
@@ -617,12 +621,12 @@
 	width: 36px;
 	height: 36px;
 	line-height: 0;
-	background: var(--color-gray);
 	padding: 1px;
-	border-radius: 50%;
+	border-radius: 6px;
 }
 
 .ChatHeader-module__iconButton__oqsIe:hover {
+	background: var(--color-gray);
 	color: #0073aa;
 }
 
@@ -734,7 +738,6 @@ h4 {
 	background: #fff;
 	width: 100%;
 	max-width: 260px;
-	background-color: var(--color-gray);
 	padding: 0.5rem 1rem;
 	overflow-y: auto;
 	transition: transform 0.3s ease-in-out;
@@ -747,6 +750,10 @@ h4 {
 		transform: translateX(0);
 		visibility: visible;
 		opacity: 1;
+	}
+
+	li {
+		list-style: none;
 	}
 }
 
@@ -767,10 +774,10 @@ h4 {
 }
 
 .Chat-module__dropdownToggle__lZywl {
+	background-color: transparent;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: var(--color-gray);
 	border: none;
 	font-size: 1.5rem;
 	cursor: pointer;
@@ -781,7 +788,7 @@ h4 {
 	transition: background-color 0.2s ease-in-out;
 
 	&:hover {
-		background-color: var(--color-gray-dark);
+		background: var(--color-gray);
 	}
 }
 

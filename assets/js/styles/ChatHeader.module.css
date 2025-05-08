@@ -81,12 +81,12 @@
 	width: 36px;
 	height: 36px;
 	line-height: 0;
-	background: var(--color-gray);
 	padding: 1px;
-	border-radius: 50%;
+	border-radius: 6px;
 }
 
 .iconButton:hover {
+	background: var(--color-gray);
 	color: #0073aa;
 }
 

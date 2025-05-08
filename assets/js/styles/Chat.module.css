@@ -33,7 +33,6 @@
 	background: #fff;
 	width: 100%;
 	max-width: 260px;
-	background-color: var(--color-gray);
 	padding: 0.5rem 1rem;
 	overflow-y: auto;
 	transition: transform 0.3s ease-in-out;
@@ -46,6 +45,10 @@
 		transform: translateX(0);
 		visibility: visible;
 		opacity: 1;
+	}
+
+	li {
+		list-style: none;
 	}
 }
 
@@ -66,10 +69,10 @@
 }
 
 .dropdownToggle {
+	background-color: transparent;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: var(--color-gray);
 	border: none;
 	font-size: 1.5rem;
 	cursor: pointer;
@@ -80,6 +83,6 @@
 	transition: background-color 0.2s ease-in-out;
 
 	&:hover {
-		background-color: var(--color-gray-dark);
+		background: var(--color-gray);
 	}
 }
