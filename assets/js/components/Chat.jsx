@@ -100,6 +100,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	};
 
 	const canEditTitle = session?.isHR || session?.isAdmin;
+	const isHR = session?.isHR || session?.isAdmin;
 
 	const handleToggleSidebar = () => setSidebarOpen((open) => !open);
 
@@ -214,6 +215,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 					attachments={attachments}
 					setAttachments={setAttachments}
 					refreshCases={refreshCases}
+					isHR={isHR}
 				/>
 			</div>
 		</div>

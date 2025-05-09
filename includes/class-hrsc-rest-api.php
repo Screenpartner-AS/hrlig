@@ -493,6 +493,7 @@ class HRSC_REST_API
             'comment_author_email' => $email,
             'comment_author_url' => '',
             'comment_agent' => 'hrsc-uploader',
+            'user_id' => get_current_user_id(),
         ];
 
         wp_insert_comment($commentdata);

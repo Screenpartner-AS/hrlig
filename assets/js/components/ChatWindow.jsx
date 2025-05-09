@@ -5,7 +5,16 @@ import styles from "../styles/ChatWindow.module.css";
 import axios from "axios";
 import { __ } from "@wordpress/i18n";
 
-const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, setAttachments, refreshCases }) => {
+const ChatWindow = ({
+	caseId,
+	messages,
+	refreshMessages,
+	loading,
+	attachments,
+	setAttachments,
+	refreshCases,
+	isHR
+}) => {
 	const { session } = useContext(SessionContext);
 	const messagesEndRef = useRef(null);
 	const fileInputRef = useRef(null);
@@ -158,6 +167,8 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 		return <div className={styles.placeholder}>{__("Select a case to view messages", "hr-support-chat")}</div>;
 	}
 
+	const bubbleClass = isHR ? styles.hrBubble : styles.userBubble;
+
 	return (
 		<div className={styles.chatContainer} ref={dropZoneRef} onDragOver={handleDragOver} onDrop={handleDrop}>
 			{dragActive && (
@@ -195,7 +206,7 @@ const ChatWindow = ({ caseId, messages, refreshMessages, loading, attachments, s
 					{/* Render pending upload placeholders at the end */}
 					{pendingUploads.map((pu, idx) => (
 						<div key={pu.id || idx} className={styles.messageRow}>
-							<div className={styles.bubble + " " + styles.userBubble}>
+							<div className={`${styles.bubble} ${bubbleClass}`}>
 								<div style={{ opacity: 0.6 }}>
 									<div>📎 {__("Uploading file...", "hr-support-chat")}</div>
 									{pu.file && pu.file.type.startsWith("image/") ? (

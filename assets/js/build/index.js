@@ -214,6 +214,7 @@ const Chat = ({
     }
   };
   const canEditTitle = session?.isHR || session?.isAdmin;
+  const isHR = session?.isHR || session?.isAdmin;
   const handleToggleSidebar = () => setSidebarOpen(open => !open);
   const handleToggleDropdown = type => {
     if (type === "attachments") {
@@ -326,7 +327,8 @@ const Chat = ({
     loading: loading,
     attachments: attachments,
     setAttachments: setAttachments,
-    refreshCases: refreshCases
+    refreshCases: refreshCases,
+    isHR: isHR
   })));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Chat);
@@ -645,7 +647,8 @@ const ChatWindow = ({
   loading,
   attachments,
   setAttachments,
-  refreshCases
+  refreshCases,
+  isHR
 }) => {
   const {
     session
@@ -789,6 +792,7 @@ const ChatWindow = ({
       className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].placeholder
     }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)("Select a case to view messages", "hr-support-chat"));
   }
+  const bubbleClass = isHR ? _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].hrBubble : _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].userBubble;
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].chatContainer,
     ref: dropZoneRef,
@@ -830,7 +834,7 @@ const ChatWindow = ({
     key: pu.id || idx,
     className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].messageRow
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].bubble + " " + _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].userBubble
+    className: `${_styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].bubble} ${bubbleClass}`
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     style: {
       opacity: 0.6
