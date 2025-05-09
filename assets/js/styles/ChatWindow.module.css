@@ -46,13 +46,14 @@
 }
 
 .bubble {
-	max-width: 80%;
+	max-width: 460px;
 	padding: 0.75rem 1rem;
 	border-radius: 1rem;
 
 	a {
 		display: block;
-		width: 320px;
+		width: 100%;
+		max-width: 320px;
 		margin: 10px 0;
 
 		img {
@@ -66,11 +67,13 @@
 
 .userBubble {
 	background-color: var(--color-gray);
+	border: 1px solid #f1f1f1;
 	align-self: flex-start;
 }
 
 .hrBubble {
-	background-color: #dcfce7;
+	background-color: #4f54d6;
+	color: #fff;
 	align-self: flex-end;
 	margin-left: auto;
 }

@@ -478,7 +478,7 @@ class HRSC_REST_API
 
         // 📎 Create a chat comment with the file link
         $comment_content = sprintf(
-            __('📎 Uploaded file: <br><a class="uploaded-file" href="%s" target="_blank" rel="noopener noreferrer"><img src="%s" alt="%s"></a>', 'hr-support-chat'),
+            __('<a class="uploaded-file" href="%s" target="_blank" rel="noopener noreferrer"><img src="%s" alt="%s"></a>', 'hr-support-chat'),
             esc_url(wp_get_attachment_url($attach_id)),
             esc_url(wp_get_attachment_image_src($attach_id, 'large')[0]),
             esc_html(basename($file['name']))

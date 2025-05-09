@@ -36,12 +36,21 @@ add_action('rest_api_init', ['HRSC_REST_API', 'register_routes']);
 
 add_action('wp_enqueue_scripts', function () {
     if (is_page_template('hrsc-page-support-chat.php')) {
+        // Enqueue Manrope font
+        wp_enqueue_style(
+            'hrsc-manrope-font',
+            'https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap',
+            [],
+            null
+        );
+
         wp_enqueue_style(
             'hrsc-chat-styles',
             plugins_url('assets/js/build/index.css', __FILE__),
             [],
             '1.0.0'
         );
+
         wp_enqueue_script(
             'hrsc-chat-app',
             plugins_url('assets/js/build/index.js', __FILE__),
