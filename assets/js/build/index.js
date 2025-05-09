@@ -558,33 +558,57 @@ __webpack_require__.r(__webpack_exports__);
 
 const ChatInfo = ({
   supportCase,
-  attachments = []
+  attachments = [],
+  onCloseCase,
+  onDeleteCase,
+  onEditCase
 }) => {
   if (!supportCase) {
     return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Loading case information…", "hr-support-chat"));
   }
-  const getStatusLabel = status => {
-    switch (status) {
-      case "New":
-      case "Ongoing":
-      case "Closed":
-        return (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)(status, "hr-support-chat");
-      default:
-        return status || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Unknown", "hr-support-chat");
-    }
-  };
-  let chatter = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Anonymous", "hr-support-chat");
-  if (supportCase.employee_first_name && supportCase.employee_email) {
-    chatter = `${supportCase.employee_first_name} (${supportCase.employee_email})`;
-  }
-  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ul", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Case ID:", "hr-support-chat")), " ", supportCase.id), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Status:", "hr-support-chat")), " ", getStatusLabel(supportCase.status)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Attachments:", "hr-support-chat")), " ", attachments.length), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("HR Advisor:", "hr-support-chat")), " ", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_UserAvatar__WEBPACK_IMPORTED_MODULE_2__["default"], {
-    user: supportCase.assigned_to || {
-      name: null,
-      avatar: null
-    },
+
+  // Use server-formatted dates and HR reply
+  const createdDate = supportCase.created_formatted || "-";
+  const modifiedDate = supportCase.modified_formatted || "-";
+  const lastHrReply = supportCase.last_hr_reply || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("No replies yet", "hr-support-chat");
+
+  // Tag list
+  const tags = supportCase.tags || [];
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "chat-info"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "chat-info__section"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, `${(0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Case", "hr-support-chat")} #${supportCase.id}`), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, supportCase.status, " ", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+    className: `status-dot status-dot--${supportCase.status.toLowerCase()}`
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, `${(0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Category:", "hr-support-chat")} ${supportCase.category || "-"}`)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "chat-info__section"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, `${(0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Created:", "hr-support-chat")} ${createdDate}`), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, `${(0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Last updated:", "hr-support-chat")} ${modifiedDate}`), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, `${(0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Last reply from HR:", "hr-support-chat")} ${lastHrReply}`), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, `${(0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Messages:", "hr-support-chat")} ${supportCase.message_count || 0}`)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "chat-info__section"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, `${(0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Attachments:", "hr-support-chat")} ${attachments.length}`)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "chat-info__section chat-info__advisor"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("HR Advisor", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_UserAvatar__WEBPACK_IMPORTED_MODULE_2__["default"], {
+    user: supportCase.assigned_to || {},
     size: 20,
-    showName: true
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Chatter:", "hr-support-chat")), " ", chatter)));
+    showName: false
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, supportCase.assigned_to?.name || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Unassigned", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, supportCase.assigned_to?.email || "-"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, supportCase.assigned_to?.phone || "-")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "chat-info__section"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, `${(0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Chatter:", "hr-support-chat")} ${supportCase.employee_first_name && supportCase.employee_email ? `${supportCase.employee_first_name} (${supportCase.employee_email})` : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Anonymous", "hr-support-chat")}`), tags.length > 0 && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "chat-info__tags"
+  }, tags.map(tag => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+    key: tag,
+    className: "chat-info__tag"
+  }, "#", tag)))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "chat-info__actions"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    onClick: onCloseCase,
+    className: "button button--secondary"
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Close Case", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    onClick: onDeleteCase,
+    className: "button button--danger"
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Delete", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    onClick: onEditCase,
+    className: "button button--primary"
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)("Edit", "hr-support-chat"))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ChatInfo);
 

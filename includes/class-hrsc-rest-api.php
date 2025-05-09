@@ -200,6 +200,40 @@ class HRSC_REST_API
                 }
             }
 
+            // 1) formatted dates:
+            $created_formatted = date_i18n(get_option('date_format'), strtotime($case->post_date));
+            $modified_formatted = date_i18n(get_option('date_format'), strtotime($case->post_modified));
+
+            // 2) last HR reply:
+            $hr_comments = get_comments([
+                'post_id' => $case->ID,
+                'number' => 1,
+                'order' => 'DESC',
+                'meta_key' => 'is_hr',  // however you mark them
+            ]);
+            if (empty($hr_comments)) {
+                $last_hr_reply = __('No replies yet', 'hr-support-chat');
+            } else {
+                $when = strtotime($hr_comments[0]->comment_date_gmt);
+                $last_hr_reply = sprintf(
+                    /* translators: %s: human time diff, e.g. “2 timer” */
+                    __('%s siden', 'hr-support-chat'),
+                    human_time_diff($when, current_time('timestamp'))
+                );
+            }
+
+            // 3) message count:
+            $message_count = get_comments([
+                'post_id' => $case->ID,
+                'status' => 'approve',
+                'count' => true,
+                'type__in' => ['comment', 'hrsc_system', 'hrsc_attachment'],
+            ]);
+
+            // 4) category & tags:
+            $category = get_post_meta($case->ID, '_hrsc_category', true) ?: '-';
+            $tags = get_post_meta($case->ID, '_hrsc_tags', true) ?: [];
+
             $cases[] = [
                 'id' => $case->ID,
                 'title' => get_the_title($case),
@@ -209,6 +243,14 @@ class HRSC_REST_API
                 'employee_first_name' => get_post_meta($case->ID, '_hrsc_employee_first_name', true),
                 'employee_email' => get_post_meta($case->ID, '_hrsc_employee_email', true),
                 'anonymous' => !empty(get_post_meta($case->ID, '_hrsc_token', true)),
+                'category' => $category,
+                'created_at' => $case->post_date,
+                'modified_at' => $case->post_modified,
+                'created_formatted' => $created_formatted,
+                'modified_formatted' => $modified_formatted,
+                'last_hr_reply' => $last_hr_reply,
+                'message_count' => $message_count,
+                'tags' => $tags
             ];
         }
 
@@ -532,4 +574,5 @@ class HRSC_REST_API
             'firstName' => sanitize_text_field($_GET['first_name'] ?? ''),
         ];
     }
+
 }
