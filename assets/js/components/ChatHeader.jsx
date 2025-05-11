@@ -10,7 +10,8 @@ const ChatHeader = ({
 	onToggleAttachments,
 	showAttachments,
 	uploading,
-	onToggleSidebar
+	onToggleSidebar,
+	isHR
 }) => {
 	const [editing, setEditing] = useState(false);
 	const [tempTitle, setTempTitle] = useState("");
@@ -18,20 +19,24 @@ const ChatHeader = ({
 	useEffect(() => {
 		// Update local state when supportCase changes
 		if (supportCase?.title?.rendered) {
-			setTempTitle(supportCase.title.rendered);
+			setTempTitle(supportCase.title);
 		}
-	}, [supportCase?.id, supportCase?.title?.rendered]);
+	}, [supportCase?.id, supportCase?.title]);
 
 	const handleStartEditing = () => {
-		setTempTitle(supportCase?.title?.rendered || "");
+		setTempTitle(supportCase?.title || "");
 		setEditing(true);
 	};
 
-	const currentTitle = supportCase?.title?.rendered || __("Untitled Case", "hr-support-chat");
+	// If user is not HR, show a static title
+	const currentTitle = !isHR
+		? __("HR Chat", "hr-support-chat")
+		: supportCase?.title || __("Untitled Case", "hr-support-chat");
 
 	const handleTitleSave = () => {
-		if (tempTitle.trim() && tempTitle !== supportCase?.title?.rendered) {
-			onTitleUpdate?.(tempTitle);
+		const newTitle = tempTitle.trim();
+		if (isHR && newTitle && newTitle !== supportCase?.title) {
+			onTitleUpdate?.(newTitle);
 		}
 		setEditing(false);
 	};
@@ -59,7 +64,7 @@ const ChatHeader = ({
 				</svg>
 			</button>
 			<div className={styles.title}>
-				{editing ? (
+				{editing && isHR ? (
 					<input
 						type="text"
 						value={tempTitle}
@@ -72,7 +77,7 @@ const ChatHeader = ({
 				) : (
 					<div className={styles.titleDisplay}>
 						<span className={styles.titleText}>{currentTitle}</span>
-						{canEditTitle && (
+						{isHR && canEditTitle && (
 							<button
 								className={styles.editButton}
 								onClick={handleStartEditing}

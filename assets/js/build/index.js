@@ -240,7 +240,8 @@ const Chat = ({
     error: error,
     loading: loading,
     sidebarOpen: sidebarOpen,
-    onCloseSidebar: () => setSidebarOpen(false)
+    onCloseSidebar: () => setSidebarOpen(false),
+    isHR: isHR
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].main,
     ref: dropRef,
@@ -270,7 +271,8 @@ const Chat = ({
         console.error("❌ Title update failed:", err);
       }
     },
-    onToggleSidebar: handleToggleSidebar
+    onToggleSidebar: handleToggleSidebar,
+    isHR: isHR
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: `${_styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdown} ${showAttachments ? _styles_Chat_module_css__WEBPACK_IMPORTED_MODULE_9__["default"].dropdownOpen : ""}`
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
@@ -417,24 +419,28 @@ const ChatHeader = ({
   onToggleAttachments,
   showAttachments,
   uploading,
-  onToggleSidebar
+  onToggleSidebar,
+  isHR
 }) => {
   const [editing, setEditing] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [tempTitle, setTempTitle] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("");
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     // Update local state when supportCase changes
     if (supportCase?.title?.rendered) {
-      setTempTitle(supportCase.title.rendered);
+      setTempTitle(supportCase.title);
     }
-  }, [supportCase?.id, supportCase?.title?.rendered]);
+  }, [supportCase?.id, supportCase?.title]);
   const handleStartEditing = () => {
-    setTempTitle(supportCase?.title?.rendered || "");
+    setTempTitle(supportCase?.title || "");
     setEditing(true);
   };
-  const currentTitle = supportCase?.title?.rendered || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Untitled Case", "hr-support-chat");
+
+  // If user is not HR, show a static title
+  const currentTitle = !isHR ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("HR Chat", "hr-support-chat") : supportCase?.title || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Untitled Case", "hr-support-chat");
   const handleTitleSave = () => {
-    if (tempTitle.trim() && tempTitle !== supportCase?.title?.rendered) {
-      onTitleUpdate?.(tempTitle);
+    const newTitle = tempTitle.trim();
+    if (isHR && newTitle && newTitle !== supportCase?.title) {
+      onTitleUpdate?.(newTitle);
     }
     setEditing(false);
   };
@@ -462,7 +468,7 @@ const ChatHeader = ({
     fill: "currentColor"
   }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].title
-  }, editing ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+  }, editing && isHR ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     type: "text",
     value: tempTitle,
     onChange: e => setTempTitle(e.target.value),
@@ -474,7 +480,7 @@ const ChatHeader = ({
     className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].titleDisplay
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
     className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].titleText
-  }, currentTitle), canEditTitle && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+  }, currentTitle), isHR && canEditTitle && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
     className: _styles_ChatHeader_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].editButton,
     onClick: handleStartEditing,
     title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Edit title", "hr-support-chat")
@@ -1127,12 +1133,12 @@ const SessionGate = ({
   }, [view, anonymous]);
   const handleChange = e => {
     const {
-      first_name,
+      name,
       value
     } = e.target;
     setForm(prev => ({
       ...prev,
-      [first_name]: value
+      [name]: value
     }));
   };
   const handleCopyClick = async () => {
@@ -1361,7 +1367,8 @@ const Sidebar = ({
   loading,
   error,
   sidebarOpen = false,
-  onCloseSidebar
+  onCloseSidebar,
+  isHR
 }) => {
   const [filter, setFilter] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("All");
   const scrollContainerRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
@@ -1370,6 +1377,7 @@ const Sidebar = ({
     if (filter === "All") return cases;
     return cases.filter(c => c.status === filter);
   }, [cases, filter]);
+  const staticLabel = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_3__.__)("HR Chat", "hr-support-chat");
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useLayoutEffect)(() => {
     if (!selectedCaseId || !activeCaseRef.current || !scrollContainerRef.current) return;
     const container = scrollContainerRef.current;
@@ -1429,6 +1437,7 @@ const Sidebar = ({
     className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseList
   }, filteredCases.map(c => {
     const isActive = c.id === selectedCaseId;
+    const title = !isHR ? staticLabel : c.title || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_3__.__)("Untitled Case", "hr-support-chat");
     return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", {
       key: c.id,
       ref: isActive ? activeCaseRef : null,
@@ -1438,7 +1447,7 @@ const Sidebar = ({
       className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseContent
     }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
       className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseTitle
-    }, c.title), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    }, title), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
       className: _styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].caseStatus
     }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
       className: `${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"].statusDot} ${_styles_Sidebar_module_css__WEBPACK_IMPORTED_MODULE_1__["default"]["status" + c.status]}`

@@ -11,7 +11,8 @@ const Sidebar = ({
 	loading,
 	error,
 	sidebarOpen = false,
-	onCloseSidebar
+	onCloseSidebar,
+	isHR
 }) => {
 	const [filter, setFilter] = useState("All");
 	const scrollContainerRef = useRef(null);
@@ -21,6 +22,8 @@ const Sidebar = ({
 		if (filter === "All") return cases;
 		return cases.filter((c) => c.status === filter);
 	}, [cases, filter]);
+
+	const staticLabel = __("HR Chat", "hr-support-chat");
 
 	useLayoutEffect(() => {
 		if (!selectedCaseId || !activeCaseRef.current || !scrollContainerRef.current) return;
@@ -82,6 +85,7 @@ const Sidebar = ({
 				<ul className={styles.caseList}>
 					{filteredCases.map((c) => {
 						const isActive = c.id === selectedCaseId;
+						const title = !isHR ? staticLabel : c.title || __("Untitled Case", "hr-support-chat");
 						return (
 							<li
 								key={c.id}
@@ -90,7 +94,7 @@ const Sidebar = ({
 								className={`${styles.caseItem} ${isActive ? styles.active : ""}`}
 							>
 								<div className={styles.caseContent}>
-									<div className={styles.caseTitle}>{c.title}</div>
+									<div className={styles.caseTitle}>{title}</div>
 									<div className={styles.caseStatus}>
 										<span className={`${styles.statusDot} ${styles["status" + c.status]}`} />
 									</div>

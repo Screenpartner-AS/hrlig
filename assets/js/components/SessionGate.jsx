@@ -28,8 +28,8 @@ const SessionGate = ({ children }) => {
 	}, [view, anonymous]);
 
 	const handleChange = (e) => {
-		const { first_name, value } = e.target;
-		setForm((prev) => ({ ...prev, [first_name]: value }));
+		const { name, value } = e.target;
+		setForm((prev) => ({ ...prev, [name]: value }));
 	};
 
 	const handleCopyClick = async () => {

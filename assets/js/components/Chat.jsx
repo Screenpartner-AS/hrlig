@@ -131,6 +131,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 				loading={loading}
 				sidebarOpen={sidebarOpen}
 				onCloseSidebar={() => setSidebarOpen(false)}
+				isHR={isHR}
 			/>
 
 			<div
@@ -163,6 +164,7 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 						}
 					}}
 					onToggleSidebar={handleToggleSidebar}
+					isHR={isHR}
 				/>
 
 				<div className={`${styles.dropdown} ${showAttachments ? styles.dropdownOpen : ""}`}>
