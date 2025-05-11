@@ -821,11 +821,14 @@ const ChatWindow = ({
       }, msg.content);
     }
     const bubbleClass = msg.is_hr ? _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].hrBubble : _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].userBubble;
+    const isAttachment = msg.comment_type === "hrsc_attachment";
+    console.log("msg", msg);
+    console.log("comment_type", msg.comment_type);
     return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
       key: idx,
       className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].messageRow
     }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-      className: `${_styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].bubble} ${bubbleClass}`,
+      className: `${_styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].bubble} ` + `${bubbleClass} ` + `${isAttachment ? _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].uploadedBubble : ""}`,
       dangerouslySetInnerHTML: {
         __html: msg.content
       }
@@ -834,7 +837,7 @@ const ChatWindow = ({
     key: pu.id || idx,
     className: _styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].messageRow
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: `${_styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].bubble} ${bubbleClass}`
+    className: `${_styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].bubble} ${bubbleClass} ${_styles_ChatWindow_module_css__WEBPACK_IMPORTED_MODULE_3__["default"].uploadingBubble}`
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     style: {
       opacity: 0.6
@@ -1081,8 +1084,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../contexts/SessionContext */ "./assets/js/contexts/SessionContext.jsx");
-/* harmony import */ var _utils_TokenUtils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/TokenUtils */ "./assets/js/utils/TokenUtils.js");
-/* harmony import */ var _api_apiClient__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../api/apiClient */ "./assets/js/api/apiClient.js");
+/* harmony import */ var _api_apiClient__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../api/apiClient */ "./assets/js/api/apiClient.js");
+/* harmony import */ var _utils_TokenUtils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/TokenUtils */ "./assets/js/utils/TokenUtils.js");
 /* harmony import */ var _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../styles/SessionGate.module.css */ "./assets/js/styles/SessionGate.module.css");
 /* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @wordpress/i18n */ "@wordpress/i18n");
 /* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__);
@@ -1102,16 +1105,19 @@ const SessionGate = ({
     ready
   } = (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(_contexts_SessionContext__WEBPACK_IMPORTED_MODULE_1__["default"]);
   const [view, setView] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("mode"); // mode | enter | create
+  const [anonymous, setAnonymous] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [form, setForm] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({
     token: "",
+    first_name: "",
+    phone: "",
     email: "",
-    firstName: ""
+    updateEmail: ""
   });
-  const [anonymous, setAnonymous] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
   const [generatedToken, setGeneratedToken] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("");
+  const [copied, setCopied] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     if (view === "create" && anonymous) {
-      const token = (0,_utils_TokenUtils__WEBPACK_IMPORTED_MODULE_2__.generateToken)();
+      const token = (0,_utils_TokenUtils__WEBPACK_IMPORTED_MODULE_3__.generateToken)();
       setGeneratedToken(token);
       setForm(f => ({
         ...f,
@@ -1121,36 +1127,45 @@ const SessionGate = ({
   }, [view, anonymous]);
   const handleChange = e => {
     const {
-      name,
+      first_name,
       value
     } = e.target;
     setForm(prev => ({
       ...prev,
-      [name]: value
+      [first_name]: value
     }));
+  };
+  const handleCopyClick = async () => {
+    const success = await (0,_utils_TokenUtils__WEBPACK_IMPORTED_MODULE_3__.copyToClipboard)(generatedToken); // or whatever your token var is
+    if (success) {
+      setCopied(true);
+      // revert back after 2s
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
   const handleSubmit = async e => {
     e.preventDefault();
     try {
       if (view === "enter") {
-        if (anonymous && form.token.trim()) {
+        if (form.token.trim()) {
           updateSession({
             token: form.token.trim()
           });
-        } else if (!anonymous && form.email && form.firstName) {
-          updateSession({
-            email: form.email.trim(),
-            firstName: form.firstName.trim()
-          });
         }
-      }
-      if (view === "create") {
-        const res = await (0,_api_apiClient__WEBPACK_IMPORTED_MODULE_3__.apiFetch)("/support-cases", "POST", {
-          token: anonymous ? generatedToken : undefined,
-          email: anonymous ? "" : form.email.trim(),
-          first_name: anonymous ? "" : form.firstName.trim(),
-          anonymous
-        });
+      } else if (view === "create") {
+        const body = {
+          anonymous,
+          token: anonymous ? form.token : undefined,
+          ...(anonymous ? {
+            update_email: form.updateEmail.trim()
+          } : {
+            first_name: form.first_name.trim(),
+            phone: form.phone.trim(),
+            email: form.email.trim(),
+            update_email: form.updateEmail.trim()
+          })
+        };
+        const res = await (0,_api_apiClient__WEBPACK_IMPORTED_MODULE_2__.apiFetch)("/support-cases", "POST", body);
         if (anonymous) {
           updateSession({
             token: res.token
@@ -1158,7 +1173,7 @@ const SessionGate = ({
         } else {
           updateSession({
             email: form.email.trim(),
-            firstName: form.firstName.trim()
+            first_name: form.first_name.trim()
           });
         }
       }
@@ -1167,94 +1182,151 @@ const SessionGate = ({
     }
   };
   if (!ready) return null;
-
-  // Accept either token/email users OR logged-in WP users
-  const isTokenSession = session?.token || session?.email && session?.firstName;
+  const isTokenSession = session?.token;
   const isWPUser = Array.isArray(session?.roles) && session.roles.length > 0;
   if (isTokenSession || isWPUser) return children;
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].container
-  }, view === "mode" ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h1", null, "Kunde AS"), view === "mode" && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].card
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].title
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("How would you like to start?", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Snakk med HR-rådgiver", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].mainDescription
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Ta kontakt for råd, informasjon om lover og regler, eller gi varsel om kritikkverdige forhold. Saken blir håndtert av en ekstern HR-rådgiver.", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].smallDescription
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Her kommer det mer info som kan være lurt å vite, men litt mindre tekst.", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].buttonGroup
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
-    onClick: () => setView("enter"),
-    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].primaryButton
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Existing Conversation", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "button",
     onClick: () => setView("create"),
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].primaryButton
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Snakk med rådgiver", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "button",
+    onClick: () => setView("enter"),
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].secondaryButton
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Create New Conversation", "hr-support-chat")))) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Vis min sak", "hr-support-chat")))), view === "enter" && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
     onSubmit: handleSubmit,
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].formCard
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "button",
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].backLink,
+    onClick: () => setView("mode")
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("svg", {
+    stroke: "currentColor",
+    fill: "none",
+    "stroke-width": "2",
+    viewBox: "0 0 24 24",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+    height: "24",
+    width: "24",
+    xmlns: "http://www.w3.org/2000/svg"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("line", {
+    x1: "19",
+    y1: "12",
+    x2: "5",
+    y2: "12"
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("polyline", {
+    points: "12 19 5 12 12 5"
+  })), (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Back", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].title
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Enter Your Chat Session", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].radioGroup
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
-    type: "radio",
-    name: "authMode",
-    checked: anonymous,
-    onChange: () => setAnonymous(true)
-  }), " ", (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Anonymous", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
-    type: "radio",
-    name: "authMode",
-    checked: !anonymous,
-    onChange: () => setAnonymous(false)
-  }), " ", (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Identified", "hr-support-chat"))), view === "enter" && anonymous && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Access Token", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Varslerportal", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].description
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("For å se saken din, skriv inn tilgangskoden du fikk da du først varslet om hendelsen.", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].inputRow
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Tilgangskode *", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     type: "text",
     name: "token",
     value: form.token,
     onChange: handleChange,
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].input,
+    required: true
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "submit",
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].primaryButton
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Vis min sak", "hr-support-chat"))), view === "create" && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
+    onSubmit: handleSubmit,
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].formCard
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "button",
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].backLink,
+    onClick: () => setView("mode")
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("svg", {
+    stroke: "currentColor",
+    fill: "none",
+    "stroke-width": "2",
+    viewBox: "0 0 24 24",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+    height: "24",
+    width: "24",
+    xmlns: "http://www.w3.org/2000/svg"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("line", {
+    x1: "19",
+    y1: "12",
+    x2: "5",
+    y2: "12"
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("polyline", {
+    points: "12 19 5 12 12 5"
+  })), (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Back", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].title
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Snakk med rådgiver", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].toggleRow
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "checkbox",
+    checked: anonymous,
+    onChange: () => setAnonymous(prev => !prev)
+  }), " ", (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Anonym", "hr-support-chat")))), !anonymous && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].inputRow
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Fornavn (valgfritt)", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "text",
+    name: "first_name",
+    value: form.first_name,
+    onChange: handleChange,
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].input
-  })), view === "enter" && !anonymous && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Email", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].inputRow
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Telefonnummer (valgfritt)", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "tel",
+    name: "phone",
+    value: form.phone,
+    onChange: handleChange,
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].input
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].inputRow
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("E-postadresse (valgfritt)", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     type: "email",
     name: "email",
     value: form.email,
     onChange: handleChange,
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].input
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("First Name", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
-    type: "text",
-    name: "firstName",
-    value: form.firstName,
+  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].inputRow
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("E-postadresse for oppdateringsvarsler (valgfritt)", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "email",
+    name: "updateEmail",
+    value: form.updateEmail,
     onChange: handleChange,
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].input
-  }))), view === "create" && anonymous && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Your Access Token", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  })), anonymous && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].warningBox
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("strong", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("⚠️ Lagre tilgangskoden din", "hr-support-chat"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Du bruker den for å få tilgang til saken din senere og se eventuelle oppdateringer. Hvis du mister den, vil du ikke kunne få tilgang til saken din igjen.", "hr-support-chat"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Tilgangskode *", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].tokenRow
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     type: "text",
+    name: "token",
     value: generatedToken,
     readOnly: true,
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].tokenField
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
     type: "button",
-    onClick: () => (0,_utils_TokenUtils__WEBPACK_IMPORTED_MODULE_2__.copyToClipboard)(generatedToken),
+    onClick: handleCopyClick,
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].copyButton
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Copy", "hr-support-chat"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
-    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].note
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Save this token to access the conversation again.", "hr-support-chat"))), view === "create" && !anonymous && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Email", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
-    type: "email",
-    name: "email",
-    value: form.email,
-    onChange: handleChange,
-    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].input
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("First Name", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
-    type: "text",
-    name: "firstName",
-    value: form.firstName,
-    onChange: handleChange,
-    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].input
-  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+  }, copied ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Copied", "hr-support-chat") : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Copy", "hr-support-chat"))))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
     type: "submit",
     className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].primaryButton
-  }, view === "enter" ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Continue", "hr-support-chat") : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Start Conversation", "hr-support-chat")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: _styles_SessionGate_module_css__WEBPACK_IMPORTED_MODULE_4__["default"].backLink
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
-    type: "button",
-    onClick: () => setView("mode")
-  }, "\u2190 ", (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Back", "hr-support-chat")))));
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_5__.__)("Send inn", "hr-support-chat"))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (SessionGate);
 
@@ -1781,7 +1853,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 // extracted by mini-css-extract-plugin
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"chatContainer":"ChatWindow-module__chatContainer__uCAP1","messagesArea":"ChatWindow-module__messagesArea__F6C1F","messagesWrapper":"ChatWindow-module__messagesWrapper__DEOYW","loadingText":"ChatWindow-module__loadingText__j6nWC","emptyText":"ChatWindow-module__emptyText__BQpiu","statusMessage":"ChatWindow-module__statusMessage__iuXg4","systemMessage":"ChatWindow-module__systemMessage__dSfwQ","messageRow":"ChatWindow-module__messageRow__AOX45","bubble":"ChatWindow-module__bubble__UTa7U","userBubble":"ChatWindow-module__userBubble__B1c74","hrBubble":"ChatWindow-module__hrBubble__vmMRe","meta":"ChatWindow-module__meta__CFypJ","inputBar":"ChatWindow-module__inputBar__WY51T","inputWrapper":"ChatWindow-module__inputWrapper__K6VK3","dragOverlay":"ChatWindow-module__dragOverlay__rg7o_","fade-in":"ChatWindow-module__fade-in__XCb7W","dragMessage":"ChatWindow-module__dragMessage__Qnhuz","uploadButton":"ChatWindow-module__uploadButton__dyhGC"});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"chatContainer":"ChatWindow-module__chatContainer__uCAP1","messagesArea":"ChatWindow-module__messagesArea__F6C1F","messagesWrapper":"ChatWindow-module__messagesWrapper__DEOYW","loadingText":"ChatWindow-module__loadingText__j6nWC","emptyText":"ChatWindow-module__emptyText__BQpiu","statusMessage":"ChatWindow-module__statusMessage__iuXg4","systemMessage":"ChatWindow-module__systemMessage__dSfwQ","messageRow":"ChatWindow-module__messageRow__AOX45","bubble":"ChatWindow-module__bubble__UTa7U","userBubble":"ChatWindow-module__userBubble__B1c74","hrBubble":"ChatWindow-module__hrBubble__vmMRe","uploadedBubble":"ChatWindow-module__uploadedBubble__MK2yj","meta":"ChatWindow-module__meta__CFypJ","inputBar":"ChatWindow-module__inputBar__WY51T","inputWrapper":"ChatWindow-module__inputWrapper__K6VK3","dragOverlay":"ChatWindow-module__dragOverlay__rg7o_","fade-in":"ChatWindow-module__fade-in__XCb7W","dragMessage":"ChatWindow-module__dragMessage__Qnhuz","uploadButton":"ChatWindow-module__uploadButton__dyhGC"});
 
 /***/ }),
 
@@ -1811,7 +1883,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 // extracted by mini-css-extract-plugin
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"container":"SessionGate-module__container__kwA8r","card":"SessionGate-module__card__rbOkx","formCard":"SessionGate-module__formCard__hHQJ1","title":"SessionGate-module__title__xUuH0","buttonGroup":"SessionGate-module__buttonGroup__brFuP","primaryButton":"SessionGate-module__primaryButton__QaDJM","secondaryButton":"SessionGate-module__secondaryButton__YHsal","radioGroup":"SessionGate-module__radioGroup__VSPiy","input":"SessionGate-module__input__Jtz3L","tokenRow":"SessionGate-module__tokenRow__FdS6b","tokenField":"SessionGate-module__tokenField__jXhej","copyButton":"SessionGate-module__copyButton__jCy26","note":"SessionGate-module__note__UmNIu","backLink":"SessionGate-module__backLink__OsoIz"});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({"container":"SessionGate-module__container__kwA8r","card":"SessionGate-module__card__rbOkx","formCard":"SessionGate-module__formCard__hHQJ1","title":"SessionGate-module__title__xUuH0","mainDescription":"SessionGate-module__mainDescription__UO9SN","smallDescription":"SessionGate-module__smallDescription__llYX6","buttonGroup":"SessionGate-module__buttonGroup__brFuP","primaryButton":"SessionGate-module__primaryButton__QaDJM","secondaryButton":"SessionGate-module__secondaryButton__YHsal","backLink":"SessionGate-module__backLink__OsoIz","inputRow":"SessionGate-module__inputRow__caEnK","input":"SessionGate-module__input__Jtz3L","toggleRow":"SessionGate-module__toggleRow__mQNO1","warningBox":"SessionGate-module__warningBox__TDklX","tokenRow":"SessionGate-module__tokenRow__FdS6b","tokenField":"SessionGate-module__tokenField__jXhej","copyButton":"SessionGate-module__copyButton__jCy26"});
 
 /***/ }),
 
@@ -1856,15 +1928,46 @@ __webpack_require__.r(__webpack_exports__);
 const generateToken = () => {
   return Math.random().toString(36).substring(2, 10);
 };
-const copyToClipboard = async text => {
+async function copyToClipboard(text) {
+  // Modern clipboard API
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (err) {
+      console.error("Failed to copy via Clipboard API:", err);
+      // fall through to fallback
+    }
+  }
+
+  // Fallback for older browsers / insecure contexts
   try {
-    await navigator.clipboard.writeText(text);
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    // Avoid scrolling to bottom
+    textarea.style.position = "fixed";
+    textarea.style.top = "0";
+    textarea.style.left = "0";
+    textarea.style.width = "1px";
+    textarea.style.height = "1px";
+    textarea.style.padding = "0";
+    textarea.style.border = "none";
+    textarea.style.outline = "none";
+    textarea.style.boxShadow = "none";
+    textarea.style.background = "transparent";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const successful = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    if (!successful) {
+      throw new Error("execCommand returned false");
+    }
     return true;
   } catch (err) {
-    console.error("Failed to copy:", err);
+    console.error("Fallback: Could not copy text:", err);
     return false;
   }
-};
+}
 
 /***/ }),
 

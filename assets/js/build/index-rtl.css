@@ -430,20 +430,6 @@
 	max-width: 460px;
 	padding: 0.75rem 1rem;
 	border-radius: 1rem;
-
-	a {
-		display: block;
-		width: 100%;
-		max-width: 320px;
-		margin: 10px 0;
-
-		img {
-			max-width: 100%;
-			display: block;
-			line-height: 0;
-			border-radius: 8px;
-		}
-	}
 }
 
 .ChatWindow-module__userBubble__B1c74 {
@@ -457,6 +443,25 @@
 	color: #fff;
 	align-self: flex-end;
 	margin-right: auto;
+}
+
+.ChatWindow-module__uploadedBubble__MK2yj {
+	padding: 0;
+	border-radius: 8px;
+
+	a {
+		margin: 0;
+		display: block;
+		width: 100%;
+		max-width: 320px;
+
+		img {
+			max-width: 100%;
+			display: block;
+			line-height: 0;
+			border-radius: 8px;
+		}
+	}
 }
 
 .ChatWindow-module__meta__CFypJ {
@@ -798,7 +803,7 @@ h4 {
 /*!*********************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./assets/js/styles/SessionGate.module.css ***!
   \*********************************************************************************************************************************************************************************************/
-.SessionGate-module__container__kwA8r {
+/* .container {
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -807,8 +812,8 @@ h4 {
 	padding: 1rem;
 }
 
-.SessionGate-module__card__rbOkx,
-.SessionGate-module__formCard__hHQJ1 {
+.card,
+.formCard {
 	background-color: #fff;
 	border-radius: 6px;
 	padding: 2rem;
@@ -818,19 +823,19 @@ h4 {
 	text-align: center;
 }
 
-.SessionGate-module__title__xUuH0 {
+.title {
 	font-size: 1.25rem;
 	font-weight: 600;
 	margin-bottom: 1rem;
 }
 
-.SessionGate-module__buttonGroup__brFuP {
+.buttonGroup {
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
 }
 
-.SessionGate-module__primaryButton__QaDJM {
+.primaryButton {
 	background-color: #2563eb;
 	color: white;
 	padding: 0.75rem;
@@ -840,7 +845,7 @@ h4 {
 	font-weight: 500;
 }
 
-.SessionGate-module__secondaryButton__YHsal {
+.secondaryButton {
 	background-color: #e5e7eb;
 	color: black;
 	padding: 0.75rem;
@@ -849,22 +854,22 @@ h4 {
 	cursor: pointer;
 }
 
-.SessionGate-module__primaryButton__QaDJM:hover {
+.primaryButton:hover {
 	background-color: #1d4ed8;
 }
 
-.SessionGate-module__secondaryButton__YHsal:hover {
+.secondaryButton:hover {
 	background-color: #d1d5db;
 }
 
-.SessionGate-module__radioGroup__VSPiy {
+.radioGroup {
 	display: flex;
 	justify-content: center;
 	gap: 1.5rem;
 	margin-bottom: 1rem;
 }
 
-.SessionGate-module__input__Jtz3L {
+.input {
 	width: 100%;
 	padding: 0.5rem;
 	margin-top: 0.25rem;
@@ -873,14 +878,14 @@ h4 {
 	border-radius: 4px;
 }
 
-.SessionGate-module__tokenRow__FdS6b {
+.tokenRow {
 	display: flex;
 	gap: 0.5rem;
 	align-items: center;
 	margin-top: 0.25rem;
 }
 
-.SessionGate-module__tokenField__jXhej {
+.tokenField {
 	flex: 1;
 	padding: 0.5rem;
 	border: 1px solid #ccc;
@@ -888,7 +893,7 @@ h4 {
 	background-color: #f9fafb;
 }
 
-.SessionGate-module__copyButton__jCy26 {
+.copyButton {
 	background-color: #10b981;
 	color: white;
 	padding: 0.5rem 0.75rem;
@@ -898,19 +903,288 @@ h4 {
 	font-size: 0.875rem;
 }
 
-.SessionGate-module__copyButton__jCy26:hover {
+.copyButton:hover {
 	background-color: #059669;
 }
 
-.SessionGate-module__note__UmNIu {
+.note {
 	font-size: 0.75rem;
 	color: #6b7280;
 	margin-top: 0.25rem;
 }
+*/
+
+.SessionGate-module__container__kwA8r {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 100vh;
+	padding: 1rem;
+	gap: 30px;
+}
+
+h1 {
+	width: 100%;
+	max-width: 380px;
+	font-weight: 700;
+	font-size: 1.7rem;
+}
+
+.SessionGate-module__card__rbOkx,
+.SessionGate-module__formCard__hHQJ1 {
+	background: #ffffff;
+	width: 100%;
+	max-width: 380px;
+}
+
+.SessionGate-module__title__xUuH0 {
+	margin-bottom: 1rem;
+	font-size: 1.3rem;
+	font-weight: 600;
+	color: #333333;
+}
+
+.SessionGate-module__mainDescription__UO9SN {
+	margin-bottom: 1.5rem;
+	font-size: 1.1rem;
+	color: #555555;
+}
+
+.SessionGate-module__smallDescription__llYX6 {
+	margin-bottom: 1.5rem;
+	font-size: 0.9rem;
+	color: #777777;
+}
+
+.SessionGate-module__buttonGroup__brFuP {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 20px;
+}
+
+.SessionGate-module__primaryButton__QaDJM {
+	display: inline-block;
+	border: 1px solid #2563eb;
+	color: #2563eb;
+	padding: 12px 16px;
+	background: transparent;
+	border-radius: 0.375rem;
+	font-size: 0.9rem;
+	cursor: pointer;
+	line-height: 1;
+
+	&:hover {
+		background: #2463eb1f;
+	}
+}
+
+.SessionGate-module__primaryButton__QaDJM:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.SessionGate-module__secondaryButton__YHsal {
+	display: inline-block;
+	background: transparent;
+	color: #2563eb;
+	font-size: 0.9rem;
+	cursor: pointer;
+	line-height: 1;
+	color: #2563eb;
+	border: none;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+.SessionGate-module__formCard__hHQJ1 {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
 
 .SessionGate-module__backLink__OsoIz {
-	margin-top: 1rem;
-	font-size: 0.875rem;
+	background: none;
+	border: none;
+	font-size: 0.9rem;
+	cursor: pointer;
+	align-self: flex-start;
+	margin-bottom: 1rem;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 8px;
+	color: #333333;
+
+	svg {
+		transition: transform 0.1s ease-in;
+	}
+
+	&:hover {
+		text-decoration: underline;
+
+		svg {
+			transform: translateX(4px);
+		}
+	}
+}
+
+.SessionGate-module__inputRow__caEnK {
+	label {
+		display: block;
+		margin-bottom: 0.5rem;
+		font-size: 0.9rem;
+		color: #333333;
+	}
+}
+
+.SessionGate-module__input__Jtz3L {
+	width: 100%;
+	padding: 0.5rem;
+	border: 1px solid #cccccc;
+	border-radius: 0.375rem;
+	font-size: 1rem;
+	height: 40px;
+	line-height: 40px;
+
+	&:focus {
+		outline: none;
+		border-color: #2563eb;
+		box-shadow:
+			0 0 0 1px #fff,
+			0 0 0 3px #b6cbf6;
+	}
+}
+
+.SessionGate-module__toggleRow__mQNO1 {
+	margin-bottom: 1rem;
+	position: relative;
+
+	&:has(input:focus-visible) label:before {
+		outline: none;
+		border-color: #2563eb;
+		box-shadow:
+			0 0 0 1px #fff,
+			0 0 0 3px #b6cbf6;
+	}
+}
+
+.SessionGate-module__toggleRow__mQNO1 input[type="checkbox"] {
+	position: absolute;
+	right: 0;
+	top: 0;
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+	cursor: pointer;
+	opacity: 0;
+}
+
+.SessionGate-module__toggleRow__mQNO1 label {
+	position: relative;
+	display: flex;
+	align-items: center;
+	font-size: 0.9rem;
+	color: #333333;
+
+	span {
+		display: inline-block;
+		margin-right: 8px;
+	}
+
+	&:before {
+		content: "";
+		width: 48px;
+		height: 32px;
+		background: #b3c5ff;
+		position: relative;
+		border-radius: 10px;
+		display: inline-block;
+		box-shadow: inset 0 0 #66bb6a;
+		transition: 0.2s ease-in;
+	}
+
+	&:after {
+		content: "";
+		position: absolute;
+		border-radius: 8px;
+		width: 28px;
+		height: 28px;
+		right: 2px;
+		top: 2px;
+		z-index: 2;
+		background: #fefefe;
+		transition: 0.2s ease-in;
+	}
+}
+
+.SessionGate-module__toggleRow__mQNO1 input[type="checkbox"]:checked + label:before {
+	box-shadow: inset -48px 0 #215aff;
+}
+.SessionGate-module__toggleRow__mQNO1 input[type="checkbox"]:checked + label:after {
+	transform: translatex(-16px);
+}
+
+.SessionGate-module__warningBox__TDklX {
+	background: #fef3c7;
+	padding: 1.4rem;
+	border-radius: 0.375rem;
+	margin: 1rem 0;
+
+	> * {
+		margin-bottom: 14px;
+
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+}
+
+.SessionGate-module__tokenRow__FdS6b {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+	margin-bottom: 1rem;
+	position: relative;
+
+	button {
+		display: block;
+		font-size: 0.9rem;
+		position: absolute;
+		top: 50%;
+		left: 0.5rem;
+		transform: translateY(-50%);
+	}
+}
+
+.SessionGate-module__tokenField__jXhej {
+	flex: 1;
+	padding: 0.5rem;
+	border: 1px solid #cccccc;
+	border-radius: 0.375rem;
+	font-family: monospace;
+	height: 40px;
+	line-height: 40px;
+
+	&:focus {
+		outline: none;
+		border-color: #2563eb;
+		box-shadow:
+			0 0 0 1px #fff,
+			0 0 0 3px #b6cbf6;
+	}
+}
+
+.SessionGate-module__copyButton__jCy26 {
+	background: transparent;
+	border: none;
+	color: #2563eb;
+	cursor: pointer;
+	font-size: 0.9rem;
 }
 
 /*!*******************************************************************************************************************************************************************************!*\

@@ -49,20 +49,6 @@
 	max-width: 460px;
 	padding: 0.75rem 1rem;
 	border-radius: 1rem;
-
-	a {
-		display: block;
-		width: 100%;
-		max-width: 320px;
-		margin: 10px 0;
-
-		img {
-			max-width: 100%;
-			display: block;
-			line-height: 0;
-			border-radius: 8px;
-		}
-	}
 }
 
 .userBubble {
@@ -76,6 +62,25 @@
 	color: #fff;
 	align-self: flex-end;
 	margin-left: auto;
+}
+
+.uploadedBubble {
+	padding: 0;
+	border-radius: 8px;
+
+	a {
+		margin: 0;
+		display: block;
+		width: 100%;
+		max-width: 320px;
+
+		img {
+			max-width: 100%;
+			display: block;
+			line-height: 0;
+			border-radius: 8px;
+		}
+	}
 }
 
 .meta {

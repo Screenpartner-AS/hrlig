@@ -194,10 +194,14 @@ const ChatWindow = ({
 							);
 						}
 						const bubbleClass = msg.is_hr ? styles.hrBubble : styles.userBubble;
+						const isAttachment = msg.comment_type === "hrsc_attachment";
+						console.log("msg", msg);
+						console.log("comment_type", msg.comment_type);
+
 						return (
 							<div key={idx} className={styles.messageRow}>
 								<div
-									className={`${styles.bubble} ${bubbleClass}`}
+									className={`${styles.bubble} ` + `${bubbleClass} ` + `${isAttachment ? styles.uploadedBubble : ""}`}
 									dangerouslySetInnerHTML={{ __html: msg.content }}
 								></div>
 							</div>
@@ -206,7 +210,7 @@ const ChatWindow = ({
 					{/* Render pending upload placeholders at the end */}
 					{pendingUploads.map((pu, idx) => (
 						<div key={pu.id || idx} className={styles.messageRow}>
-							<div className={`${styles.bubble} ${bubbleClass}`}>
+							<div className={`${styles.bubble} ${bubbleClass} ${styles.uploadingBubble}`}>
 								<div style={{ opacity: 0.6 }}>
 									<div>📎 {__("Uploading file...", "hr-support-chat")}</div>
 									{pu.file && pu.file.type.startsWith("image/") ? (

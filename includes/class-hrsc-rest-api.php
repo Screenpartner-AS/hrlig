@@ -291,6 +291,7 @@ class HRSC_REST_API
                 'date' => $comment->comment_date,
                 'is_hr' => $is_system ? false : user_can($comment->user_id, 'edit_support_cases'),
                 'is_system' => $is_system,
+                'comment_type' => $comment->comment_type
             ];
         }
         return $messages;
