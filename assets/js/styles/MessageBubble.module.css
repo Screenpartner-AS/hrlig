@@ -13,8 +13,8 @@
 
 .bubble {
 	max-width: 80%;
-	padding: 0.75rem 1rem;
-	border-radius: 1rem;
+	padding: 0.75em 1em;
+	border-radius: 1em;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -29,21 +29,21 @@
 }
 
 .content {
-	font-size: 0.875rem;
+	font-size: 0.875em;
 	color: #111827;
 }
 
 .meta {
-	margin-top: 0.5rem;
-	font-size: 0.6875rem;
+	margin-top: 0.5em;
+	font-size: 0.6875em;
 	color: #6b7280;
 	text-align: right;
 }
 
 .system {
 	text-align: center;
-	font-size: 0.75rem;
+	font-size: 0.75em;
 	color: #9ca3af;
 	font-style: italic;
-	margin: 1rem 0;
+	margin: 1em 0;
 }
