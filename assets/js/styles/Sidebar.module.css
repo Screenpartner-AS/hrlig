@@ -65,7 +65,7 @@
 		border-radius: 6px;
 
 		&:hover {
-			background: var(--color-gray);
+			background: var(--color-gray-dark);
 		}
 	}
 }

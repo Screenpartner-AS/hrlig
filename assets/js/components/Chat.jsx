@@ -48,6 +48,17 @@ const Chat = ({ selectedCaseId, onSelectCase }) => {
 	}, []);
 
 	useEffect(() => {
+		const setVh = () => {
+			// 1% of the viewport height
+			const vh = window.innerHeight * 0.01;
+			document.documentElement.style.setProperty("--vh", `${vh}px`);
+		};
+		window.addEventListener("resize", setVh);
+		setVh();
+		return () => window.removeEventListener("resize", setVh);
+	}, []);
+
+	useEffect(() => {
 		if (!caseId && cases.length > 0) {
 			setCaseId(cases[0].id);
 			onSelectCase?.(cases[0].id);
