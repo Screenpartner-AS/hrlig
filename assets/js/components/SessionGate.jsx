@@ -126,10 +126,10 @@ const SessionGate = ({ children }) => {
 						</svg>
 						{__("Back", "hr-support-chat")}
 					</button>
-					<h2 className={styles.title}>{__("Varslerportal", "hr-support-chat")}</h2>
+					<h2 className={styles.title}>{__("Saksportal", "hr-support-chat")}</h2>
 					<p className={styles.description}>
 						{__(
-							"For å se saken din, skriv inn tilgangskoden du fikk da du først varslet om hendelsen.",
+							"For å se saken din, skriv inn tilgangskoden du fikk da du først opprettet din sak.",
 							"hr-support-chat"
 						)}
 					</p>
