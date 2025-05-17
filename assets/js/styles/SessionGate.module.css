@@ -249,9 +249,9 @@ h1 {
 	&:focus {
 		outline: none !important;
 		border-color: #2563eb !important;
-		box-shadow!important:
+		box-shadow:
 			0 0 0 1px #fff,
-			0 0 0 3px #b6cbf6;
+			0 0 0 3px #b6cbf6 !important;
 	}
 }
 

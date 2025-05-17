@@ -1,0 +1,26 @@
+.chatInfo {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: flex-start;
+	gap: 1em;
+}
+
+.ChatInfoActions {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5em;
+}
+
+.Button {
+	cursor: pointer;
+	font-size: 0.9em;
+	padding: 0.5em 1em;
+	border-radius: 0.375em;
+	display: block;
+	width: 100%;
+	text-align: center;
+	color: white;
+	background: var(--text-color);
+}
